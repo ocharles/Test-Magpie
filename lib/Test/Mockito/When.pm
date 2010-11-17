@@ -7,10 +7,7 @@ use Moose::Util qw( find_meta );
 use Test::Mockito::Mock qw( add_stub );
 use Test::Mockito::Util qw( extract_method_name );
 
-has 'mock' => (
-    is => 'bare',
-    required => 1
-);
+with 'Test::Mockito::Role::HasMock';
 
 our $AUTOLOAD;
 sub AUTOLOAD {

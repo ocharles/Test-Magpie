@@ -22,13 +22,6 @@ sub execute {
     return $self->_next_execution->();
 }
 
-sub matches_invocation {
-    my ($self, $invocation) = @_;
-    return
-        $invocation->method_name eq $self->method_name &&
-        @{[ $invocation->arguments ]} ~~ @{[ $self->arguments ]};
-}
-
 sub then_return {
     my $self = shift;
     my $ret = shift;

@@ -26,4 +26,11 @@ sub as_string {
         '(' . Devel::PartialDump->new->dump($self->arguments) . ')';
 }
 
+sub satisfied_by {
+    my ($self, $invocation) = @_;
+    return
+        $invocation->method_name eq $self->method_name &&
+        @{[ $invocation->arguments ]} ~~ @{[ $self->arguments ]};
+}
+
 1;

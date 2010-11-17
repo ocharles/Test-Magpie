@@ -3,6 +3,7 @@ use strict;
 use warnings;
 
 use aliased 'Test::Mockito::Mock';
+use aliased 'Test::Mockito::Spy';
 use aliased 'Test::Mockito::When';
 
 use Data::Dumper;
@@ -21,8 +22,7 @@ sub history {
 
 sub verify {
     my $mock = shift;
-    find_meta($mock)->get_attribute('state')->set_value($mock => 2);
-    return $mock;
+    return Spy->new(mock => $mock, @_);
 }
 
 sub mock {

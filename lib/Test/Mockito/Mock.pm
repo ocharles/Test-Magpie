@@ -44,7 +44,7 @@ sub AUTOLOAD {
         $invocation->method_name
     }) {
         
-        my $stub = first { $_->matches_invocation($invocation) } @$stubs;
+        my $stub = first { $_->satisfied_by($invocation) } @$stubs;
         return unless $stub;
         $stub->execute;
     }

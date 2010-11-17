@@ -52,6 +52,20 @@ subtest 'consecutive' => sub {
     ok exception { $iterator->next };
 };
 
+subtest 'spying' => sub {
+    my $spy = mock;
+    $spy->method_call;
+    verify($spy)->method_call;
+};
+
+subtest 'verification count' => sub {
+    my $dummy = mock;
+    $dummy->foo for (1,2);
+    $dummy->bar for (1,2);
+    verify($dummy, times => 2)->foo;
+    verify($dummy, times => 3)->bar;
+};
+
 pass;
 done_testing;
 
