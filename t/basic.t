@@ -39,6 +39,19 @@ subtest 'Argument matching' => sub {
     is($list->get(1), 'second');
 };
 
+subtest 'consecutive' => sub {
+    my $iterator = mock;
+    when($iterator)
+        ->next
+            ->then_return(1)
+            ->then_return(2)
+            ->then_die('Out of numbers');
+
+    is($iterator->next, 1);
+    is($iterator->next, 2);
+    ok exception { $iterator->next };
+};
+
 pass;
 done_testing;
 

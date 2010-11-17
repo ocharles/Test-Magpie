@@ -7,37 +7,19 @@ use Scalar::Util qw( blessed );
 
 with 'Test::Mockito::Role::MethodCall';
 
-has 'returns' => (
+has 'executions' => (
     isa => ArrayRef,
     traits => [ 'Array' ],
     default => sub { [] },
     handles => {
-        then_return => 'push',
-        next_return => 'shift'
-    }
-);
-
-has 'exceptions' => (
-    isa => ArrayRef,
-    traits => [ 'Array' ],
-    default => sub { [] },
-    handles => {
-        then_die => 'push',
-        next_exception => 'shift'
+        _store_execution => 'push',
+        _next_execution => 'shift'
     }
 );
 
 sub execute {
     my $self = shift;
-    if (my $exception = $self->next_exception) {
-        if (blessed($exception) && $exception->can('throw')) {
-            $exception->throw;
-        }
-        else {
-            die $exception;
-        }
-    }
-    return $self->next_return;
+    return $self->_next_execution->();
 }
 
 sub matches_invocation {
@@ -45,7 +27,29 @@ sub matches_invocation {
     return
         $invocation->method_name eq $self->method_name &&
         @{[ $invocation->arguments ]} ~~ @{[ $self->arguments ]};
- }
+}
 
+sub then_return {
+    my $self = shift;
+    my $ret = shift;
+    $self->_store_execution(sub {
+        return $ret;
+    });
+    return $self;
+}
+
+sub then_die {
+    my $self = shift;
+    my $exception = shift;
+    $self->_store_execution(sub {
+        if (blessed($exception) && $exception->can('throw')) {
+            $exception->throw;
+        }
+        else {
+            die $exception;
+        }
+    });
+    return $self;
+}
 
 1;
