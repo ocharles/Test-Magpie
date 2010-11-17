@@ -32,7 +32,8 @@ sub AUTOLOAD {
     my $method = $AUTOLOAD;
     my $self = shift;
     my $meta = find_meta($self);
-    my $invocations = $meta->get_attribute('invocations')->get_value($self);
+    my $invocations = $meta->find_attribute_by_name('invocations')
+        ->get_value($self);
     my $invocation = Invocation->new(
         method_name => extract_method_name($method),
         arguments => \@_
@@ -40,10 +41,9 @@ sub AUTOLOAD {
 
     push @$invocations, $invocation;
 
-    if(my $stubs = $meta->get_attribute('stubs')->get_value($self)->{
+    if(my $stubs = $meta->find_attribute_by_name('stubs')->get_value($self)->{
         $invocation->method_name
     }) {
-        
         my $stub = first { $_->satisfied_by($invocation) } @$stubs;
         return unless $stub;
         $stub->execute;
