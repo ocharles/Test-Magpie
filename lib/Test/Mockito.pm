@@ -3,12 +3,13 @@ use strict;
 use warnings;
 
 use aliased 'Test::Mockito::Mock';
+use aliased 'Test::Mockito::When';
 
 use Data::Dumper;
 use Moose::Util qw( find_meta );
 
 use Sub::Exporter -setup => {
-    exports => [qw( history mock verify )]
+    exports => [qw( history mock when verify )]
 };
 
 sub history {
@@ -26,6 +27,11 @@ sub verify {
 
 sub mock {
     return Mock->new;
+}
+
+sub when {
+    my $mock = shift;
+    return When->new(mock => $mock);
 }
 
 1;
