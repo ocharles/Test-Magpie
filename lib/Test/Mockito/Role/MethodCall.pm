@@ -3,6 +3,7 @@ use Moose::Role;
 use namespace::autoclean;
 
 use MooseX::Types::Moose qw( ArrayRef Str );
+use Devel::PartialDump;
 
 has 'method_name' => (
     isa => Str,
@@ -21,7 +22,8 @@ has 'arguments' => (
 
 sub as_string {
     my $self = shift;
-    return $self->method_name . '(' . join(", ", $self->arguments) . ')';
+    return $self->method_name .
+        '(' . Devel::PartialDump->new->dump($self->arguments) . ')';
 }
 
 1;
