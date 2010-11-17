@@ -48,16 +48,15 @@ sub AUTOLOAD {
         my $expectation = shift(@$expectations);
         my $invocation = Invocation->new(%args);
 
-        unless ($expectation && $expectation->satisfied_by($invocation)) {
-            $Test->ok(0, 'Verification failed');
-            $Test->diag(
-                sprintf "Expected:\t%s\nGot:\t\t%s",
-                    (defined $expectation
-                        ? $expectation->as_string
-                        : '(no more calls)'),
-                    $invocation->as_string
-            );
-        }
+        my $satisfied = $expectation && $expectation->satisfied_by($invocation);
+        $Test->ok($satisfied, 'Expecting ' . $expectation->as_string);
+        $Test->diag(
+            sprintf "Expected:\t%s\nGot:\t\t%s",
+                (defined $expectation
+                    ? $expectation->as_string
+                    : '(no more calls)'),
+                $invocation->as_string
+        ) unless $satisfied;
     }
 }
 
