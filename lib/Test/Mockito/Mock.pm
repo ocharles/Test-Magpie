@@ -8,6 +8,7 @@ use Sub::Exporter -setup => {
 use aliased 'Test::Mockito::Invocation';
 
 use Test::Mockito::Util qw( extract_method_name );
+use List::AllUtils qw( first );
 use MooseX::Types::Moose qw( ArrayRef Int Object Str );
 use MooseX::Types::Structured qw( Map );
 use Moose::Util qw( find_meta );
@@ -33,15 +34,18 @@ sub AUTOLOAD {
     my $meta = find_meta($self);
     my $invocations = $meta->get_attribute('invocations')->get_value($self);
     my $invocation = Invocation->new(
-        method_name => $method,
+        method_name => extract_method_name($method),
         arguments => \@_
     );
 
     push @$invocations, $invocation;
 
-    if(my $stub = $meta->get_attribute('stubs')->get_value($self)->{
-        extract_method_name($invocation->method_name)
+    if(my $stubs = $meta->get_attribute('stubs')->get_value($self)->{
+        $invocation->method_name
     }) {
+        
+        my $stub = first { $_->matches_invocation($invocation) } @$stubs;
+        return unless $stub;
         $stub->execute;
     }
 }
@@ -49,8 +53,10 @@ sub AUTOLOAD {
 sub add_stub {
     my ($self, $stub) = @_;
     my $meta = find_meta($self);
-    $meta->get_attribute('stubs')->get_value($self)
-        ->{extract_method_name($stub->method_name)} = $stub;
+    my $stubs = $meta->get_attribute('stubs')->get_value($self);
+    my $method = $stub->method_name;
+    $stubs->{$method} ||= [];
+    push @{ $stubs->{$method} }, $stub;
 }
 
 1;
