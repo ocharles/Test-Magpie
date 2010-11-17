@@ -10,15 +10,8 @@ use Data::Dumper;
 use Moose::Util qw( find_meta );
 
 use Sub::Exporter -setup => {
-    exports => [qw( history mock when verify )]
+    exports => [qw( mock when verify )]
 };
-
-sub history {
-    my $mock = shift;
-    join("\n", map { Dumper($_) } @{
-        find_meta($mock)->get_attribute('invocations')->get_value($mock)
-    });
-}
 
 sub verify {
     my $mock = shift;
