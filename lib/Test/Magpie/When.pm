@@ -1,13 +1,13 @@
-package Test::Mockito::When;
+package Test::Magpie::When;
 use Moose;
 use namespace::autoclean;
 
-use aliased 'Test::Mockito::Stub';
+use aliased 'Test::Magpie::Stub';
 use Moose::Util qw( find_meta );
-use Test::Mockito::Mock qw( add_stub );
-use Test::Mockito::Util qw( extract_method_name );
+use Test::Magpie::Mock qw( add_stub );
+use Test::Magpie::Util qw( extract_method_name );
 
-with 'Test::Mockito::Role::HasMock';
+with 'Test::Magpie::Role::HasMock';
 
 our $AUTOLOAD;
 sub AUTOLOAD {

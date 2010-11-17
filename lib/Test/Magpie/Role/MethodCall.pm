@@ -1,4 +1,4 @@
-package Test::Mockito::Role::MethodCall;
+package Test::Magpie::Role::MethodCall;
 use Moose::Role;
 use namespace::autoclean;
 

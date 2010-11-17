@@ -1,4 +1,4 @@
-package Test::Mockito::Util;
+package Test::Magpie::Util;
 use strict;
 use warnings;
 

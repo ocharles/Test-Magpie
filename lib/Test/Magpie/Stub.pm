@@ -1,11 +1,11 @@
-package Test::Mockito::Stub;
+package Test::Magpie::Stub;
 use Moose;
 
 use List::AllUtils qw( all pairwise );
 use MooseX::Types::Moose qw( ArrayRef );
 use Scalar::Util qw( blessed );
 
-with 'Test::Mockito::Role::MethodCall';
+with 'Test::Magpie::Role::MethodCall';
 
 has 'executions' => (
     isa => ArrayRef,

@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::Mockito qw( when mock verify );
+use Test::Magpie qw( when mock verify );
 use Test::More;
 use Test::Fatal;
 
@@ -63,7 +63,7 @@ subtest 'verification count' => sub {
     $dummy->foo for (1,2);
     $dummy->bar for (1,2);
     verify($dummy, times => 2)->foo;
-    verify($dummy, times => 3)->bar;
+    verify($dummy, times => 2)->bar;
 };
 
 pass;

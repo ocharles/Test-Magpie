@@ -1,13 +1,13 @@
-package Test::Mockito::Mock;
+package Test::Magpie::Mock;
 use Moose;
 
 use Sub::Exporter -setup => {
     exports => [qw( add_stub )],
 };
 
-use aliased 'Test::Mockito::Invocation';
+use aliased 'Test::Magpie::Invocation';
 
-use Test::Mockito::Util qw( extract_method_name );
+use Test::Magpie::Util qw( extract_method_name );
 use List::AllUtils qw( first );
 use MooseX::Types::Moose qw( ArrayRef Int Object Str );
 use MooseX::Types::Structured qw( Map );

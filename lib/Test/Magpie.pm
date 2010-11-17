@@ -1,12 +1,12 @@
-package Test::Mockito;
+package Test::Magpie;
+# ABSTRACT: Spy on objcets to achieve test doubles (mock testing)
 use strict;
 use warnings;
 
-use aliased 'Test::Mockito::Mock';
-use aliased 'Test::Mockito::Spy';
-use aliased 'Test::Mockito::When';
+use aliased 'Test::Magpie::Mock';
+use aliased 'Test::Magpie::Spy';
+use aliased 'Test::Magpie::When';
 
-use Data::Dumper;
 use Moose::Util qw( find_meta );
 
 use Sub::Exporter -setup => {
