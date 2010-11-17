@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::Mockito qw( history mock );
+use Test::Mockito qw( history mock verify );
 use Test::More;
 
 my $mock = mock;
@@ -8,7 +8,10 @@ my $mock = mock;
 $mock->do_something;
 $mock->explode('rapidly');
 
-diag(history($mock));
+verify($mock);
+$mock->do_something;
+$mock->explode;
+$mock->boom;
 
 pass;
 done_testing;
