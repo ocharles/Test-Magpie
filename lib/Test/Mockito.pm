@@ -21,6 +21,7 @@ sub history {
 sub verify {
     my $mock = shift;
     find_meta($mock)->get_attribute('state')->set_value($mock => 2);
+    return $mock;
 }
 
 sub mock {
