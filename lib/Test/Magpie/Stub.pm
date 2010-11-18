@@ -14,13 +14,17 @@ has 'executions' => (
     default => sub { [] },
     handles => {
         _store_execution => 'push',
-        _next_execution => 'shift'
+        _next_execution => 'shift',
+        _has_executions => 'count',
     }
 );
 
 sub execute {
     my $self = shift;
-    return $self->_next_execution->();
+    if(my $code = $self->_next_execution) {
+        return $code->();
+    }
+    return;
 }
 
 sub then_return {
