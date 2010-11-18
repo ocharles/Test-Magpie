@@ -3,6 +3,7 @@ package Test::Magpie;
 use strict;
 use warnings;
 
+use aliased 'Test::Magpie::Inspect';
 use aliased 'Test::Magpie::Mock';
 use aliased 'Test::Magpie::Spy';
 use aliased 'Test::Magpie::When';
@@ -12,7 +13,7 @@ use MooseX::Params::Validate;
 use Test::Magpie::Types Mock => { -as => 'MockType' };
 
 use Sub::Exporter -setup => {
-    exports => [qw( mock when verify )]
+    exports => [qw( inspect mock when verify )]
 };
 
 sub verify {
@@ -31,6 +32,13 @@ sub when {
         { isa => MockType }
     );
     return When->new(mock => $mock);
+}
+
+sub inspect {
+    my ($mock) = pos_validated_list(\@_,
+        { isa => MockType }
+    );
+    return Inspect->new(mock => $mock);
 }
 
 1;
