@@ -60,5 +60,9 @@ sub add_stub {
 }
 
 sub does { 1 }
+sub isa {
+    my ($self, $package) = @_;
+    return !($package =~ /^Class::MOP::*/);
+}
 
 1;
