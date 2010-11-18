@@ -4,17 +4,53 @@ package Test::Magpie::ArgumentMatcher;
 use strict;
 use warnings;
 
+use Test::Magpie::Util match => { -as => '_match' };
+use Set::Object qw( set );
+
 use Sub::Exporter -setup => {
-    exports => [qw( anything )],
+    exports => [
+        qw( anything hash custom_matcher ),
+        set => sub { \&_set }
+    ],
 };
 
 sub anything {
-    bless sub { return (1,()) }, __PACKAGE__;
+    bless sub { return () }, __PACKAGE__;
+}
+
+sub hash {
+    my (%template) = @_;
+    bless sub {
+        my %hash = @_;
+        for (keys %template) {
+            if (my $v = delete $hash{$_}) {
+                return unless _match($v, $template{$_});
+            }
+            else {
+                return;
+            }
+        }
+        return %hash;
+    }, __PACKAGE__;
+}
+
+sub _set {
+    my ($take) = set(@_);
+    bless sub {
+        return set(@_) == $take ? () : undef;
+    }, __PACKAGE__;
 }
 
 sub match {
     my ($self, @input) = @_;
     return $self->(@input);
+}
+
+sub custom_matcher {
+    my $test = shift;
+    bless sub {
+        $test->(@_) ? () : undef
+    }, __PACKAGE__;
 }
 
 1;

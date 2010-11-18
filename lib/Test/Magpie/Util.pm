@@ -3,8 +3,11 @@ package Test::Magpie::Util;
 use strict;
 use warnings;
 
+use aliased 'Test::Magpie::ArgumentMatcher';
+use Scalar::Util qw( blessed );
+
 use Sub::Exporter -setup => {
-    exports => [qw( extract_method_name )],
+    exports => [qw( extract_method_name match )],
 };
 
 sub extract_method_name {
@@ -13,12 +16,23 @@ sub extract_method_name {
     return $method;
 }
 
+sub match {
+    my ($a, $b) = @_;
+    return blessed($a)
+        ? (ref($a) eq ref($b) && $a == $b)
+        : $a ~~ $b;
+}
+
 1;
 
-=method extract_method_name
+=func extract_method_name
 
 Internal. From a fully qualified method name such as Foo::Bar::baz, will return
 just the method name (in this example, baz).
+
+=func match
+
+Internal. Match 2 values for equality
 
 =cut
 
