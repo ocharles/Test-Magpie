@@ -1,5 +1,5 @@
 package Test::Magpie::Mock;
-use Moose;
+use Moose -metaclass => 'Test::Magpie::Meta::Class';
 
 use Sub::Exporter -setup => {
     exports => [qw( add_stub )],
@@ -53,10 +53,12 @@ sub AUTOLOAD {
 sub add_stub {
     my ($self, $stub) = @_;
     my $meta = find_meta($self);
-    my $stubs = $meta->get_attribute('stubs')->get_value($self);
+    my $stubs = $meta->find_attribute_by_name('stubs')->get_value($self);
     my $method = $stub->method_name;
     $stubs->{$method} ||= [];
     push @{ $stubs->{$method} }, $stub;
 }
+
+sub does { 1 }
 
 1;
