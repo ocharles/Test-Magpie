@@ -8,6 +8,8 @@ use aliased 'Test::Magpie::Spy';
 use aliased 'Test::Magpie::When';
 
 use Moose::Util qw( find_meta ensure_all_roles );
+use MooseX::Params::Validate;
+use Test::Magpie::Types Mock => { -as => 'MockType' };
 
 use Sub::Exporter -setup => {
     exports => [qw( mock when verify )]
@@ -25,7 +27,9 @@ sub mock {
 }
 
 sub when {
-    my $mock = shift;
+    my ($mock) = pos_validated_list(\@_,
+        { isa => MockType }
+    );
     return When->new(mock => $mock);
 }
 
