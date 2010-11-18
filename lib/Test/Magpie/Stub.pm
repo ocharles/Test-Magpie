@@ -29,9 +29,9 @@ sub execute {
 
 sub then_return {
     my $self = shift;
-    my $ret = shift;
+    my @ret = @_;
     $self->_store_execution(sub {
-        return $ret;
+        return wantarray ? (@ret) : $ret[0];
     });
     return $self;
 }
