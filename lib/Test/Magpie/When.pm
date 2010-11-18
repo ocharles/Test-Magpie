@@ -21,7 +21,13 @@ sub AUTOLOAD {
         arguments => \@_
     );
 
-    add_stub($mock, $stub);
+    my $stubs = find_meta($mock)->find_attribute_by_name('stubs')
+        ->get_value($mock);
+
+    my $method = $stub->method_name;
+    $stubs->{$method} ||= [];
+    push @{ $stubs->{$method} }, $stub;
+
     return $stub;
 }
 

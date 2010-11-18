@@ -1,10 +1,7 @@
 package Test::Magpie::Mock;
 # ABSTRACT: A mock object
 use Moose -metaclass => 'Test::Magpie::Meta::Class';
-
-use Sub::Exporter -setup => {
-    exports => [qw( add_stub )],
-};
+use namespace::autoclean;
 
 use aliased 'Test::Magpie::Invocation';
 
@@ -49,15 +46,6 @@ sub AUTOLOAD {
         return unless $stub;
         $stub->execute;
     }
-}
-
-sub add_stub {
-    my ($self, $stub) = @_;
-    my $meta = find_meta($self);
-    my $stubs = $meta->find_attribute_by_name('stubs')->get_value($self);
-    my $method = $stub->method_name;
-    $stubs->{$method} ||= [];
-    push @{ $stubs->{$method} }, $stub;
 }
 
 sub does { 1 }
