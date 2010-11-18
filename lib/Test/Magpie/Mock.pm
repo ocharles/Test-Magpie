@@ -1,4 +1,5 @@
 package Test::Magpie::Mock;
+# ABSTRACT: A mock object
 use Moose -metaclass => 'Test::Magpie::Meta::Class';
 
 use Sub::Exporter -setup => {
@@ -66,3 +67,34 @@ sub isa {
 }
 
 1;
+
+=head1 DESCRIPTION
+
+Mock objects are the objects you pass around as if they were real objects. They
+do not have a defined API; any method call is valid. A mock on its own is in
+record mode - method calls and arguments will be saved. You can switch
+temporarily to stub and verification mode with C<when> and C<verify> in
+L<Test::Magpie>, respectively.
+
+=attr stubs
+
+This attribute is internal, and not publically accessible.
+
+Returns a map of method name to stub array references. Stubs are matched against
+invocation arguments to determine which stub to dispatch to.
+
+=attr invocations
+
+This attribute is internal, and not publically accessible.
+
+Returns an array reference of all method invocations on this mock.
+
+=method isa $class
+
+Forced to return true for any package
+
+=method does $role
+
+Forced to return true for any role
+
+=cut
