@@ -46,7 +46,7 @@ sub AUTOLOAD {
     my $invocations = find_meta($mock)->get_attribute('invocations')
         ->get_value($mock);
 
-    my @matches = grep { $_->satisfied_by($observe) } @$invocations;
+    my @matches = grep { $observe->satisfied_by($_) } @$invocations;
     
     my $invocation_counter = $meta->get_attribute('invocation_counter')
         ->get_value($self);
