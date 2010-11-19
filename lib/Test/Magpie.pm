@@ -13,7 +13,10 @@ use MooseX::Params::Validate;
 use Test::Magpie::Types Mock => { -as => 'MockType' };
 
 use Sub::Exporter -setup => {
-    exports => [qw( inspect mock when verify )]
+    exports => [qw(
+        inspect mock when verify
+        at_least at_most
+    )]
 };
 
 sub verify {
@@ -39,6 +42,16 @@ sub inspect {
         { isa => MockType }
     );
     return Inspect->new(mock => $mock);
+}
+
+sub at_least {
+    my $n = shift;
+    return sub { @_ >= $n }
+}
+
+sub at_most {
+    my $n = shift;
+    return sub { @_ <= $n }
 }
 
 1;

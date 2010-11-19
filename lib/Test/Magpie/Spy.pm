@@ -25,8 +25,10 @@ sub BUILDARGS {
     my $self = shift;
     my %args = @_;
 
-    if (my $times = delete $args{times}) {
-        $args{invocation_counter} = sub { @_ == $times };
+    if (defined(my $times = delete $args{times})) {
+        $args{invocation_counter} = ref($times) eq 'CODE'
+            ? $times
+            : sub { @_ == $times };
     }
 
     return \%args;
