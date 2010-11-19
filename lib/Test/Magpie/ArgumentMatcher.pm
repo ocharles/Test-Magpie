@@ -46,9 +46,10 @@ sub match {
     return $self->(@input);
 }
 
-sub custom_matcher {
+sub custom_matcher (&;) {
     my $test = shift;
     bless sub {
+        local $_ = $_[0];
         $test->(@_) ? () : undef
     }, __PACKAGE__;
 }
