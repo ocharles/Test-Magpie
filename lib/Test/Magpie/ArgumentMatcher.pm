@@ -109,4 +109,35 @@ one. You are, however, welcome to use them before.
 Match an argument matcher against @in, and return a list of parameters still to
 be consumed, or undef on validation.
 
+=func custom_matcher { ...code.... }
+
+Creates a custom argument matcher for you. This argument matcher is assumed to
+be the final argument matcher. If this matcher passes (that is, returns a true
+value), then it is assumed that all remaining arguments have been matched.
+
+Custom matchers are code references. You can use $_ to reference to the first
+argument, but a custom argument matcher may match more than one argument. It is
+passed the contents of C<@_> that have not yet been matched, in essence.
+
+=func type $type_constraint
+
+Checks that a single value meets a given Moose type constraint. You may want to
+consider the use of L<MooseX::Types> here for code clarity.
+
+=func hash %match
+
+Does deep comparison on all remaining arguments, and verifies that they meet the
+specification in C<%match>. Note that this is for hashes, B<not> hash
+references!
+
+=func set @values
+
+Compares that all remaining arguments match the set of values in C<@values>.
+This allows you to compare objects out of order.
+
+Note: this currently uses real L<Set::Object>s to do the work which means
+duplicate arguments B<are ignored>. For example C<1, 1, 2> will match C<1, 2>,
+C<1, 2, 2>. This is probably a bug and I will fix it, but for now I'm mostly
+waiting for a bug report - sorry!
+
 =cut

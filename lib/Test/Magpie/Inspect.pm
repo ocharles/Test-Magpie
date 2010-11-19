@@ -1,4 +1,5 @@
 package Test::Magpie::Inspect;
+# ABSTRACT: Inspect invocations of methods on mocks
 use Moose;
 use namespace::autoclean;
 
@@ -33,3 +34,23 @@ sub AUTOLOAD {
 
 1;
 
+=head1 SYNOPSIS
+
+    my $mock = mock;
+    $mock->something({ deep => { structure => [] }};
+    my $invocation = inspect($mock)->something(anything);
+    ok(defined $invocation, 'something was called');
+    is_deeply(($invocation->arguments)[0],
+        { deep => { structure => [] }})
+
+=head1 DESCRIPTION
+
+Inspecting a mock objects allows you to write slightly clearer tests than having
+a complex verification call. L<Test::Magpie/inspect> gives back an object of
+this class that, like other functions, has the same API as your mock object.
+
+When a method is called, we see if any invocation matches it's name and argument
+specification (inspectors can use argument matchers), and if so - return that
+invocation as a L<Test::Magpie::Invocation>. Otherwise, C<undef> is returned.
+
+=cut

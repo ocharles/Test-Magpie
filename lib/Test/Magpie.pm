@@ -122,9 +122,11 @@ C<%options> contains a few nice options to help make verification easier:
 
 =over 4
 
-=item times : Int
+=item times
 
-Makes sure that the given method was called C<times> times.
+Makes sure that the given method was called C<times> times. This may either be
+an integer, or it could be a bit more general, and specified using
+L<Test::Magpie/at_least> or L<Test::Magpie/at_most>
 
 =back
 
@@ -137,5 +139,18 @@ all the same methods), but a method call stores a stub method in the mock class,
 rather than an invocation. After specifying the method you wish to stub, you
 will be working with a L<Test::Magpie::Stub>, and you should consult that
 documentation for how to fully specify the stub.
+
+=func inspect($mock)
+
+Inspect method invocations on a mock object. See L<Test::Magpie::Inspect> for
+more information.
+
+=func at_least(Int $n)
+
+Verify that a method was invoked at least C<$n> times
+
+=func at_most(Int $n)
+
+Verify that a method was invoked at most C<$n> times
 
 =cut
