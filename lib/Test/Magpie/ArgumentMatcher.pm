@@ -9,7 +9,7 @@ use Set::Object qw( set );
 
 use Sub::Exporter -setup => {
     exports => [
-        qw( anything hash custom_matcher ),
+        qw( anything hash custom_matcher type ),
         set => sub { \&_set }
     ],
 };
@@ -51,6 +51,14 @@ sub custom_matcher (&;) {
     bless sub {
         local $_ = $_[0];
         $test->(@_) ? () : undef
+    }, __PACKAGE__;
+}
+
+sub type {
+    my $type = shift;
+    bless sub {
+        my ($arg, @in) = @_;
+        $type->check($arg) ? @in : undef
     }, __PACKAGE__;
 }
 
