@@ -25,9 +25,14 @@ sub verify {
 }
 
 sub mock {
+    return Mock->new if @_ == 0;
+
+    my $class;
+    $class = shift if @_ % 2;
     my %opts = @_;
-    my $mock = Mock->new;
-    return $mock;
+    $opts{class} = $class if defined $class;
+
+    return Mock->new(\%opts);
 }
 
 sub when {
@@ -106,9 +111,12 @@ You can check equality between arguments, or consume a general type of argument,
 or consume multiple arguments. See L<Test::Magpie::ArgumentMatcher> for the
 juicy details.
 
-=func mock
+=func mock([$blessed])
 
 Construct a new instance of a mock object.
+
+C<$blessed> is an optional argument to set the type that the mock object is
+blessed into. This value will be returned when C<ref()> is called on the object.
 
 =func verify($mock, [%options])
 

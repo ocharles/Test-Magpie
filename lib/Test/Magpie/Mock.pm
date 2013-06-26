@@ -6,12 +6,19 @@ use namespace::autoclean;
 use aliased 'Test::Magpie::Invocation';
 use aliased 'Test::Magpie::Stub';
 
-use Test::Magpie::Util qw( extract_method_name );
+use Test::Magpie::Util qw( extract_method_name has_caller_package );
 use List::AllUtils qw( first );
 use MooseX::Types::Moose qw( ArrayRef Int Object Str );
 use MooseX::Types::Structured qw( Map );
 use Moose::Util qw( find_meta );
 use Test::Builder;
+use UNIVERSAL::ref;
+
+has 'class' => (
+    isa => Str,
+    is => 'ro',
+    default => __PACKAGE__,
+);
 
 has 'invocations' => (
     isa => ArrayRef,
@@ -54,11 +61,21 @@ sub AUTOLOAD {
     }
 }
 
-sub does { 1 }
+sub does {
+    return if has_caller_package('UNIVERSAL::ref');
+    return 1;
+}
+
 sub isa {
     my ($self, $package) = @_;
-    return !($package =~ /^Class::MOP::*/);
+    return if (
+        has_caller_package('UNIVERSAL::ref') ||
+        $package =~ /^Class::MOP::*/
+    );
+    return 1;
 }
+
+sub ref { $_[0]->class }
 
 1;
 
@@ -69,6 +86,12 @@ do not have a defined API; any method call is valid. A mock on its own is in
 record mode - method calls and arguments will be saved. You can switch
 temporarily to stub and verification mode with C<when> and C<verify> in
 L<Test::Magpie>, respectively.
+
+=attr class
+
+This attribute is the name of the class that the object is pretending to be
+blessed into. This is only needed if you call C<ref()> on the object and want
+it to return a particular type.
 
 =attr stubs
 
@@ -90,5 +113,10 @@ Forced to return true for any package
 =method does $role
 
 Forced to return true for any role
+
+=method ref
+
+Returns the value of the object's C<class> attribute. This also works if you
+call C<ref()> as a function instead of a method.
 
 =cut

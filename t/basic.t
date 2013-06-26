@@ -9,6 +9,13 @@ subtest 'Basic' => sub {
     ok(!$mock->foo);
 };
 
+subtest 'Types' => sub {
+    my $mock = mock('Foo');
+    is ref($mock), 'Foo';
+    ok $mock->isa('Bar');
+    ok $mock->does('Baz');
+};
+
 subtest 'Stubbing basic' => sub {
     my $mock = mock;
     when($mock)->foo->then_return('bar');
