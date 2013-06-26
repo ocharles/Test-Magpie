@@ -1,0 +1,5 @@
+Revision history for Test-Magpie
+
+0.06    2013-06-26
+        Enable calling ref() on mock object to return a specified type
+
