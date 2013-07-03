@@ -7,8 +7,7 @@ use aliased 'Test::Magpie::Invocation';
 use aliased 'Test::Magpie::Stub';
 
 use Test::Magpie::Util qw( extract_method_name has_caller_package );
-use List::AllUtils qw( first );
-use MooseX::Types::Moose qw( ArrayRef Int Object Str );
+use MooseX::Types::Moose qw( ArrayRef Int Str );
 use MooseX::Types::Structured qw( Map );
 use Moose::Util qw( find_meta );
 use Test::Builder;
@@ -21,13 +20,13 @@ has 'class' => (
 );
 
 has 'invocations' => (
-    isa => ArrayRef,
+    isa => ArrayRef[Invocation],
     is => 'bare',
     default => sub { [] }
 );
 
 has 'stubs' => (
-    isa => Map[Str, Object],
+    isa => Map[ Str, ArrayRef[Stub] ],
     is => 'bare',
     default => sub { {} }
 );
@@ -38,15 +37,17 @@ sub AUTOLOAD {
     my $method = $AUTOLOAD;
     my $self = shift;
     my $meta = find_meta($self);
+
+    # record the method invocation for verification
     my $invocations = $meta->find_attribute_by_name('invocations')
         ->get_value($self);
     my $invocation = Invocation->new(
         method_name => extract_method_name($method),
         arguments => \@_
     );
-
     push @$invocations, $invocation;
 
+    # find a stub to return a response
     if(my $stubs = $meta->find_attribute_by_name('stubs')->get_value($self)->{
         $invocation->method_name
     }) {
