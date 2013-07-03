@@ -32,20 +32,4 @@ subtest 'mock(class)' => sub {
         'arg exception';
 };
 
-subtest 'invoke method with stubs' => sub {
-    my $mock = mock;
-
-    # generate the stubs
-    when($mock)->foo->then_die('stub1');
-    when($mock)->foo(123, 456)->then_die('stub2');
-    when($mock)->foo(123)->then_return('stub3');
-    when($mock)->foo(123)->then_return('stub4');
-    when($mock)->foo(anything)->then_return('stub5');
-
-    is $mock->foo(123), 'stub3', 'returned stub';
-    is $mock->foo(123), 'stub4', 'returned next stub';
-    is $mock->foo(123), 'stub5', 'returned stub with arg matcher';
-    like exception {$mock->foo}, qr/^stub1/, 'returned previous stub';
-};
-
-done_testing(4);
+done_testing(3);

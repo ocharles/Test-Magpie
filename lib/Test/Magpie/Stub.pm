@@ -1,8 +1,8 @@
 package Test::Magpie::Stub;
 # ABSTRACT: The declaration of a stubbed method
 use Moose;
+use namespace::autoclean;
 
-use List::AllUtils qw( all pairwise );
 use MooseX::Types::Moose qw( ArrayRef );
 use Scalar::Util qw( blessed );
 
@@ -21,10 +21,9 @@ has 'executions' => (
 
 sub execute {
     my $self = shift;
-    if(my $code = $self->_next_execution) {
-        return $code->();
-    }
-    return;
+    #$self->_has_executions || confess "Stub has no more executions";
+
+    return ( $self->_next_execution )->();
 }
 
 sub then_return {
