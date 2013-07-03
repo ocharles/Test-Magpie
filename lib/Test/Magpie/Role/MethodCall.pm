@@ -5,8 +5,8 @@ use namespace::autoclean;
 
 use aliased 'Test::Magpie::ArgumentMatcher';
 
-use MooseX::Types::Moose qw( ArrayRef Str );
 use Devel::PartialDump;
+use MooseX::Types::Moose qw( ArrayRef Str );
 use Test::Magpie::Util qw( match );
 
 has 'method_name' => (

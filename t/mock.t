@@ -32,30 +32,6 @@ subtest 'mock(class)' => sub {
         'arg exception';
 };
 
-subtest 'invoke method with no stub' => sub {
-    my $mock = mock;
-
-    my @invocations = (
-        ['foo', []],
-        ['foo', [123]],
-    );
-    my $invocations = find_meta($mock)->find_attribute_by_name('invocations')
-        ->get_value($mock);
-
-    my $i = 0;
-    foreach (@invocations) {
-        my ($method, $args) = @$_;
-
-        ok ! $mock->$method(@$args), 'invoked';
-
-        is scalar @$invocations, $i + 1, 'invocation recorded';
-        isa_ok $invocations->[$i], 'Test::Magpie::Invocation';
-        is $invocations->[$i]->method_name, $method, 'method_name';
-        is_deeply [$invocations->[$i]->arguments], $args, 'arguments';
-        $i++;
-    }
-};
-
 subtest 'invoke method with stubs' => sub {
     my $mock = mock;
 
@@ -72,4 +48,4 @@ subtest 'invoke method with stubs' => sub {
     like exception {$mock->foo}, qr/^stub1/, 'returned previous stub';
 };
 
-done_testing(5);
+done_testing(4);
