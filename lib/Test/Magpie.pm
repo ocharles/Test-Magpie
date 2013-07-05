@@ -8,8 +8,7 @@ use aliased 'Test::Magpie::Mock';
 use aliased 'Test::Magpie::Spy';
 use aliased 'Test::Magpie::When';
 
-use Moose::Util qw( find_meta ensure_all_roles );
-use MooseX::Params::Validate;
+use Carp qw( croak );
 use Test::Magpie::Types Mock => { -as => 'MockType' };
 
 use Sub::Exporter -setup => {
@@ -19,34 +18,42 @@ use Sub::Exporter -setup => {
     )]
 };
 
+sub inspect {
+    my ($mock) = @_;
+
+    (defined $mock && MockType->check($mock))
+       || croak 'inspect() must be given a mock object';
+
+    return Inspect->new(mock => $mock);
+}
+
 sub mock {
     return Mock->new if @_ == 0;
 
-    my $class;
-    $class = shift if @_ % 2;
-    my %opts = @_;
-    $opts{class} = $class if defined $class;
+    my ($class) = @_;
 
-    return Mock->new(\%opts);
+    (!ref $class)
+       || croak 'The argument for mock() must be a string';
+
+    return Mock->new(class => $class);
 }
 
 sub verify {
     my $mock = shift;
+
+    (defined $mock && MockType->check($mock))
+       || croak 'verify() must be given a mock object';
+
     return Spy->new(mock => $mock, @_);
 }
 
 sub when {
-    my ($mock) = pos_validated_list(\@_,
-        { isa => MockType }
-    );
-    return When->new(mock => $mock);
-}
+    my ($mock) = @_;
 
-sub inspect {
-    my ($mock) = pos_validated_list(\@_,
-        { isa => MockType }
-    );
-    return Inspect->new(mock => $mock);
+    (defined $mock && MockType->check($mock))
+       || croak 'when() must be given a mock object';
+
+    return When->new(mock => $mock);
 }
 
 sub at_least {
