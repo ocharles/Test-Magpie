@@ -2,6 +2,7 @@ package Test::Magpie::Util;
 # ABSTRACT: Utilities used by Test::Magpie
 use strict;
 use warnings;
+use 5.010_001; # dependency for smartmatching
 
 use aliased 'Test::Magpie::ArgumentMatcher';
 use Scalar::Util qw( blessed );
