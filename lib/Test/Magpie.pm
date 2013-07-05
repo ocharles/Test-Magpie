@@ -19,11 +19,6 @@ use Sub::Exporter -setup => {
     )]
 };
 
-sub verify {
-    my $mock = shift;
-    return Spy->new(mock => $mock, @_);
-}
-
 sub mock {
     return Mock->new if @_ == 0;
 
@@ -33,6 +28,11 @@ sub mock {
     $opts{class} = $class if defined $class;
 
     return Mock->new(\%opts);
+}
+
+sub verify {
+    my $mock = shift;
+    return Spy->new(mock => $mock, @_);
 }
 
 sub when {
