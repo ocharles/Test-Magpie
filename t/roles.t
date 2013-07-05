@@ -1,8 +1,11 @@
+#!/usr/bin/perl -T
 use strict;
 use warnings;
-use Test::Magpie qw( when mock verify );
+
 use Test::More;
 use Test::Moose;
+
+use Test::Magpie qw( when mock verify );
 
 {
     package Role;

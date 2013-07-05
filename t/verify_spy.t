@@ -8,7 +8,7 @@ use Test::Builder::Tester;
 
 BEGIN { use_ok 'Test::Magpie', qw(mock verify at_least at_most) }
 
-use Test::Magpie::Util qw( get_attribute );
+use Test::Magpie::Util qw( get_attribute_value );
 
 my $mock = mock;
 
@@ -16,7 +16,7 @@ subtest 'verify()' => sub {
     my $spy = verify($mock);
     isa_ok $spy, 'Test::Magpie::Spy';
 
-    is get_attribute($spy, 'mock'), $mock, 'has mock';
+    is get_attribute_value($spy, 'mock'), $mock, 'has mock';
 
     like exception { verify },
         qr/^verify\(\) must be given a mock object/,

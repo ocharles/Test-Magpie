@@ -32,10 +32,12 @@ sub as_string {
 
 sub satisfied_by {
     my ($self, $invocation) = @_;
+
     return unless $invocation->method_name eq $self->method_name;
+
     my @input = $invocation->arguments;
     my @expected = $self->arguments;
-    while(@input && @expected) {
+    while (@input && @expected) {
         my $matcher = shift(@expected);
         if (ref($matcher) eq ArgumentMatcher) {
             @input = $matcher->match(@input);

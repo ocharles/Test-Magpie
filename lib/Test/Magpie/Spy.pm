@@ -6,9 +6,8 @@ use namespace::autoclean;
 use aliased 'Test::Magpie::Invocation';
 
 use List::AllUtils qw( first );
-use Moose::Util qw( find_meta );
 use Test::Builder;
-use Test::Magpie::Util qw( extract_method_name );
+use Test::Magpie::Util qw( extract_method_name get_attribute_value );
 
 with 'Test::Magpie::Role::HasMock';
 
@@ -37,25 +36,25 @@ sub BUILDARGS {
 our $AUTOLOAD;
 sub AUTOLOAD {
     my $self = shift;
-    my $method = extract_method_name($AUTOLOAD);
+    my $method_name = extract_method_name($AUTOLOAD);
+
     my $observe = Invocation->new(
-        method_name => $method,
-        arguments => \@_
+        method_name => $method_name,
+        arguments   => \@_,
     );
 
-    my $meta = find_meta($self);
-    my $mock = $meta->get_attribute('mock')->get_value($self);
-    my $invocations = find_meta($mock)->get_attribute('invocations')
-        ->get_value($mock);
+    my $mock = get_attribute_value($self, 'mock');
+    my $invocations = get_attribute_value($mock, 'invocations');
 
     my @matches = grep { $observe->satisfied_by($_) } @$invocations;
-    
-    my $invocation_counter = $meta->get_attribute('invocation_counter')
-        ->get_value($self);
 
-    $tb->ok($invocation_counter->(@matches), 
+    my $invocation_counter = get_attribute_value($self, 'invocation_counter');
+
+    $tb->ok($invocation_counter->(@matches),
         sprintf("%s was invoked the correct number of times",
             $observe->as_string));
+
+    return;
 }
 
 1;

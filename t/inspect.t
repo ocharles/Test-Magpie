@@ -8,7 +8,7 @@ use Test::Fatal;
 BEGIN { use_ok 'Test::Magpie', qw(mock inspect) }
 
 use Test::Magpie::ArgumentMatcher qw( anything );
-use Test::Magpie::Util qw( get_attribute );
+use Test::Magpie::Util qw( get_attribute_value );
 
 my $mock = mock;
 $mock->foo;
@@ -20,7 +20,7 @@ subtest 'inspect()' => sub {
     $inspect = inspect($mock);
     isa_ok $inspect, 'Test::Magpie::Inspect';
 
-    is get_attribute($inspect, 'mock'), $mock, 'has mock';
+    is get_attribute_value($inspect, 'mock'), $mock, 'has mock';
 
     like exception { inspect },
         qr/^inspect\(\) must be given a mock object/,

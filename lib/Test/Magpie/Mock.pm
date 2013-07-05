@@ -6,10 +6,13 @@ use namespace::autoclean;
 use aliased 'Test::Magpie::Invocation';
 use aliased 'Test::Magpie::Stub';
 
-use Test::Magpie::Util qw( extract_method_name has_caller_package );
+use Test::Magpie::Util qw(
+    extract_method_name
+    get_attribute_value
+    has_caller_package
+);
 use MooseX::Types::Moose qw( ArrayRef Int Str );
 use MooseX::Types::Structured qw( Map );
-use Moose::Util qw( find_meta );
 use Test::Builder;
 use UNIVERSAL::ref;
 
@@ -32,31 +35,28 @@ has 'stubs' => (
 );
 
 our $AUTOLOAD;
-
 sub AUTOLOAD {
-    my $method = $AUTOLOAD;
     my $self = shift;
-    my $meta = find_meta($self);
+    my $method_name = extract_method_name($AUTOLOAD);
 
     # record the method invocation for verification
-    my $invocations = $meta->find_attribute_by_name('invocations')
-        ->get_value($self);
-    my $invocation = Invocation->new(
-        method_name => extract_method_name($method),
-        arguments => \@_
+    my $invocation  = Invocation->new(
+        method_name => $method_name,
+        arguments   => \@_,
     );
+
+    my $invocations = get_attribute_value($self, 'invocations');
     push @$invocations, $invocation;
 
     # find a stub to return a response
-    if(my $stubs = $meta->find_attribute_by_name('stubs')->get_value($self)->{
-        $invocation->method_name
-    }) {
-        my $stub_meta = find_meta(Stub);
-        my @possible = grep { $_->satisfied_by($invocation) } @$stubs;
-        for my $stub (@possible) {
-            if ($stub->_has_executions) {
-                return $stub->execute;
-            }
+    if (
+        my $stubs = get_attribute_value($self, 'stubs')->{ $method_name }
+    ) {
+        for my $stub (@$stubs) {
+            return $stub->execute if (
+                $stub->satisfied_by($invocation) &&
+                $stub->_has_executions
+            );
         }
         return;
     }

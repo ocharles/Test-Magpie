@@ -6,14 +6,14 @@ use Test::More;
 
 BEGIN { use_ok 'Test::Magpie', 'mock' }
 
-use Test::Magpie::Util qw( get_attribute );
+use Test::Magpie::Util qw( get_attribute_value );
 
 use constant Invocation => 'Test::Magpie::Invocation';
 
 my $mock = mock;
 ok ! $mock->foo(123, bar => 456), 'mock method invoked';
 
-my $invocation = get_attribute($mock, 'invocations')->[-1];
+my $invocation = get_attribute_value($mock, 'invocations')->[-1];
 isa_ok $invocation, Invocation;
 
 is $invocation->method_name, 'foo',                    'method_name';

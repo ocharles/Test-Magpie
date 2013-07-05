@@ -1,11 +1,14 @@
+#!/usr/bin/perl -T
 use strict;
 use warnings;
+
 use Test::Fatal;
 use Test::More;
-use Test::Magpie::ArgumentMatcher qw( type custom_matcher );
-use Test::Magpie qw( mock verify when at_least at_most );
 
 use MooseX::Types::Moose qw( Int );
+
+use Test::Magpie::ArgumentMatcher qw( type custom_matcher );
+use Test::Magpie qw( mock verify when at_least at_most );
 
 subtest 'Lets verify some behaviour!' => sub {
     my $mocked_list = mock;
