@@ -18,6 +18,14 @@ sub anything {
     bless sub { return () }, __PACKAGE__;
 }
 
+sub custom_matcher (&;) {
+    my $test = shift;
+    bless sub {
+        local $_ = $_[0];
+        $test->(@_) ? () : undef
+    }, __PACKAGE__;
+}
+
 sub hash {
     my (%template) = @_;
     bless sub {
@@ -44,14 +52,6 @@ sub _set {
 sub match {
     my ($self, @input) = @_;
     return $self->(@input);
-}
-
-sub custom_matcher (&;) {
-    my $test = shift;
-    bless sub {
-        local $_ = $_[0];
-        $test->(@_) ? () : undef
-    }, __PACKAGE__;
 }
 
 sub type {
