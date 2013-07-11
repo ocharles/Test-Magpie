@@ -29,6 +29,7 @@ sub AUTOLOAD {
     return first { $inspect->satisfied_by($_) } @$invocations;
 }
 
+__PACKAGE__->meta->make_immutable;
 1;
 
 =head1 SYNOPSIS

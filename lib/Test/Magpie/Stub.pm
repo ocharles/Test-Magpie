@@ -49,6 +49,7 @@ sub then_die {
     return $self;
 }
 
+__PACKAGE__->meta->make_immutable;
 1;
 
 =head1 DESCRIPTION

@@ -57,6 +57,7 @@ sub AUTOLOAD {
     return;
 }
 
+__PACKAGE__->meta->make_immutable;
 1;
 
 =head1 DESCRIPTION

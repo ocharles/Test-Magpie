@@ -7,6 +7,7 @@ extends 'Moose::Meta::Class';
 
 override 'does_role' => sub { 1 };
 
+__PACKAGE__->meta->make_immutable;
 1;
 
 =head1 DESCRIPTION

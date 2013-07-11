@@ -11,9 +11,9 @@ use Test::Magpie::Util qw(
     get_attribute_value
     has_caller_package
 );
+
 use MooseX::Types::Moose qw( ArrayRef Int Str );
 use MooseX::Types::Structured qw( Map );
-use Test::Builder;
 use UNIVERSAL::ref;
 
 has 'class' => (
@@ -78,6 +78,7 @@ sub isa {
 
 sub ref { $_[0]->class }
 
+__PACKAGE__->meta->make_immutable;
 1;
 
 =head1 DESCRIPTION

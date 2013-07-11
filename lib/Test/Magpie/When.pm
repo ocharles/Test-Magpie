@@ -26,6 +26,7 @@ sub AUTOLOAD {
     return $stub;
 }
 
+__PACKAGE__->meta->make_immutable;
 1;
 
 =head1 DESCRIPTION
