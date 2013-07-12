@@ -34,6 +34,9 @@ subtest 'times default' => sub {
 # currently Test::Builder::Test (0.98) does not work with subtests
 # subtest 'times' => sub {
 {
+    like exception { verify($mock, times => 'string') },
+        qr/^option \'times\' must be a number/, 'invalid times';
+
     $mock->twice() for 1..2;
     verify($mock, times => 2)->twice();
 
@@ -45,21 +48,27 @@ subtest 'times default' => sub {
 
 # subtest 'at_least' => sub {
 {
-    verify($mock, times => at_least(1))->once;
+    like exception { verify($mock, at_least => 'string') },
+        qr/^option \'at_least\' must be a number/, 'invalid at_least';
+
+    verify($mock, at_least => 1)->once;
 
     test_out('not ok 1 - once() was invoked the correct number of times');
     test_fail(+1);
-    verify($mock, times => at_least(2))->once;
+    verify($mock, at_least => 2)->once;
     test_test('at_least not reached');
 }
 
 # subtest 'at_most' => sub {
 {
-    verify($mock, times => at_most(2))->twice;
+    like exception { verify($mock, at_most => 'string') },
+        qr/^option \'at_most\' must be a number/, 'invalid at_most';
+
+    verify($mock, at_most => 2)->twice;
 
     test_out('not ok 1 - twice() was invoked the correct number of times');
     test_fail(+1);
-    verify($mock, times => at_most(1))->twice;
+    verify($mock, at_most => 1)->twice;
     test_test('at_most exceeded');
 }
 

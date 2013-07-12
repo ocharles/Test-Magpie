@@ -9,6 +9,7 @@ use aliased 'Test::Magpie::Spy';
 use aliased 'Test::Magpie::When';
 
 use Carp qw( croak );
+use Scalar::Util qw( looks_like_number );
 use Test::Magpie::Types Mock => { -as => 'MockType' };
 
 use Sub::Exporter -setup => {
@@ -39,12 +40,25 @@ sub mock {
 }
 
 sub verify {
-    my $mock = shift;
+    my ($mock, %options) = @_;
 
     (defined $mock && MockType->check($mock))
        || croak 'verify() must be given a mock object';
 
-    return Spy->new(mock => $mock, @_);
+    ( ! defined $options{times} ||
+      looks_like_number $options{times} ||
+      ref $options{times} eq 'CODE' )
+       || croak "option 'times' must be a number";
+
+    ( ! defined $options{at_least} || looks_like_number $options{at_least} )
+       || croak "option 'at_least' must be a number";
+    ( ! defined $options{at_most} || looks_like_number $options{at_most} )
+       || croak "option 'at_most' must be a number";
+
+    # set default option
+    $options{times} = 1 if keys %options == 0;
+
+    return Spy->new(mock => $mock, %options);
 }
 
 sub when {
@@ -57,11 +71,15 @@ sub when {
 }
 
 sub at_least {
+    warnings::warnif('deprecated', 'at_least() is deprecated');
+
     my $n = shift;
     return sub { @_ >= $n }
 }
 
 sub at_most {
+    warnings::warnif('deprecated', 'at_most() is deprecated');
+
     my $n = shift;
     return sub { @_ <= $n }
 }
