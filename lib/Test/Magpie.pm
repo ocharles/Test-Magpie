@@ -73,15 +73,15 @@ sub when {
 sub at_least {
     warnings::warnif('deprecated', 'at_least() is deprecated');
 
-    my $n = shift;
-    return sub { @_ >= $n }
+    my ($n) = @_;
+    return sub { $n <= $_[0] }
 }
 
 sub at_most {
     warnings::warnif('deprecated', 'at_most() is deprecated');
 
-    my $n = shift;
-    return sub { @_ <= $n }
+    my ($n) = @_;
+    return sub { $n >= $_[0] }
 }
 
 1;
@@ -157,9 +157,16 @@ C<%options> contains a few nice options to help make verification easier:
 
 =item times
 
-Makes sure that the given method was called C<times> times. This may either be
-an integer, or it could be a bit more general, and specified using
-L<Test::Magpie/at_least> or L<Test::Magpie/at_most>
+Specifies the number of times the given method is expected to be called. The
+default is 1 if no other option is specified.
+
+=item at_least
+
+Specifies the minimum number of times the given method is expected to be called.
+
+=item at_most
+
+Specifies the maximum number of times the given method is expected to be called.
 
 =back
 

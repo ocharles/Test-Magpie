@@ -6,32 +6,58 @@ use namespace::autoclean;
 use aliased 'Test::Magpie::Invocation';
 
 use List::AllUtils qw( first );
+use MooseX::Types::Moose qw( ArrayRef Str );
 use Test::Builder;
 use Test::Magpie::Util qw( extract_method_name get_attribute_value );
 
 with 'Test::Magpie::Role::HasMock';
 
-has 'invocation_counter' => (
-    default => sub {
-        sub { @_ > 0 }
+my $TB = Test::Builder->new;
+
+my %INVOCATION_TESTS = (
+    at_least => sub {
+        my ($n) = @_;
+        return sub { $n <= $_[0] };
     },
+    at_most => sub {
+        my ($n) = @_;
+        return sub { $n >= $_[0] };
+    },
+    times => sub {
+        my ($n) = @_;
+        return sub { $n == $_[0] };
+    },
+);
+
+has 'name' => (
+    isa => Str,
     is => 'bare',
 );
 
-my $tb = Test::Builder->new;
+has 'invocation_counters' => (
+    isa => ArrayRef,
+    is => 'bare',
+    default => sub { [] },
+);
 
-sub BUILDARGS {
+around 'BUILDARGS' => sub {
+    my $orig = shift;
     my $self = shift;
-    my %args = @_;
+    my $args = $self->$orig(@_);
 
-    if (defined(my $times = delete $args{times})) {
-        $args{invocation_counter} = ref($times) eq 'CODE'
-            ? $times
-            : sub { @_ == $times };
+    # create invocation_counters out of times, at_least and at_most options
+    my @invocation_counters;
+    foreach (grep {defined $args->{$_}} qw[times at_least at_most]) {
+        my $times = delete $args->{$_};
+
+        # $times is a coderef if at_least() or at_most() are used
+        push @invocation_counters,
+            !ref($times) ? $INVOCATION_TESTS{$_}->($times) : $times;
     }
+    $args->{ invocation_counters } = \@invocation_counters;
 
-    return \%args;
-}
+    return $args;
+};
 
 our $AUTOLOAD;
 sub AUTOLOAD {
@@ -46,14 +72,20 @@ sub AUTOLOAD {
     my $mock = get_attribute_value($self, 'mock');
     my $invocations = get_attribute_value($mock, 'invocations');
 
-    my @matches = grep { $observe->satisfied_by($_) } @$invocations;
+    my $matches = grep { $observe->satisfied_by($_) } @$invocations;
 
-    my $invocation_counter = get_attribute_value($self, 'invocation_counter');
+    my $invocation_counters = get_attribute_value($self, 'invocation_counters');
+    my $test = 1;
+    foreach (@$invocation_counters) {
+        $test &&= $_->($matches);
+        last if ! $test;
+    }
 
-    $tb->ok($invocation_counter->(@matches),
+    my $name = get_attribute_value($self, 'name') ||
         sprintf("%s was invoked the correct number of times",
-            $observe->as_string));
+            $observe->as_string);
 
+    $TB->ok($test, $name);
     return;
 }
 
