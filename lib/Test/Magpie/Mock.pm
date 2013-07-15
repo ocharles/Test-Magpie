@@ -18,7 +18,7 @@ use UNIVERSAL::ref;
 
 has 'class' => (
     isa => Str,
-    is => 'ro',
+    reader => 'ref',
     default => __PACKAGE__,
 );
 
@@ -75,8 +75,6 @@ sub isa {
     );
     return 1;
 }
-
-sub ref { $_[0]->class }
 
 __PACKAGE__->meta->make_immutable;
 1;

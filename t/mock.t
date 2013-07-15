@@ -13,19 +13,17 @@ use constant Mock => 'Test::Magpie::Mock';
 
 subtest 'mock()' => sub {
     my $mock = mock;
-    ok $mock,               'mock()';
+    ok $mock,              'mock()';
     isa_ok $mock, 'Bar';
-    ok $mock->isa('Bar'),   'isa anything';
-    ok $mock->does('Baz'),  'does anything';
-    is $mock->class, Mock,  'no class';
-    isnt ref($mock), 'Foo', 'no ref';
+    ok $mock->isa('Bar'),  'isa anything';
+    ok $mock->does('Baz'), 'does anything';
+    is ref($mock), Mock,   'no ref';
 };
 
 subtest 'mock(class)' => sub {
     my $mock = mock('Foo');
-    ok $mock,               'mock(class)';
-    is $mock->class, 'Foo', 'class';
-    is ref($mock),   'Foo', 'ref';
+    ok $mock,             'mock(class)';
+    is ref($mock), 'Foo', 'ref';
 
     like exception {mock($mock)},
         qr/^The argument for mock\(\) must be a string/,
