@@ -22,8 +22,8 @@ use Sub::Exporter -setup => {
 sub inspect {
     my ($mock) = @_;
 
-    (defined $mock && MockType->check($mock))
-       || croak 'inspect() must be given a mock object';
+    croak 'inspect() must be given a mock object'
+        unless defined $mock && MockType->check($mock);
 
     return Inspect->new(mock => $mock);
 }
@@ -33,30 +33,42 @@ sub mock {
 
     my ($class) = @_;
 
-    (!ref $class)
-       || croak 'The argument for mock() must be a string';
+    croak 'The argument for mock() must be a string'
+        unless !ref $class;
 
     return Mock->new(class => $class);
 }
 
 sub verify {
     my ($mock, %options) = @_;
+    my @options = qw( times at_least at_most );
+    my @used_options = grep { defined $options{$_} } @options;
 
-    (defined $mock && MockType->check($mock))
-       || croak 'verify() must be given a mock object';
+    croak 'verify() must be given a mock object'
+        unless defined $mock && MockType->check($mock);
 
-    ( ! defined $options{times} ||
-      looks_like_number $options{times} ||
-      ref $options{times} eq 'CODE' )
-       || croak "option 'times' must be a number";
+    croak 'You can set only one of these options: '
+        . join ', ', map {"'$_'"} @options
+        unless scalar @used_options <= 1;
 
-    ( ! defined $options{at_least} || looks_like_number $options{at_least} )
-       || croak "option 'at_least' must be a number";
-    ( ! defined $options{at_most} || looks_like_number $options{at_most} )
-       || croak "option 'at_most' must be a number";
+    croak "'times' option must be a number" unless (
+        ! defined $options{times} ||
+        looks_like_number $options{times} ||
+        ref $options{times} eq 'CODE'
+    );
+
+    croak "'at_least' option must be a number" unless (
+        ! defined $options{at_least} ||
+        looks_like_number $options{at_least}
+    );
+
+    croak "'at_most' option must be a number" unless (
+        ! defined $options{at_most} ||
+        looks_like_number $options{at_most}
+    );
 
     # set default option
-    $options{times} = 1 if keys %options == 0;
+    $options{times} = 1 if @used_options == 0;
 
     return Spy->new(mock => $mock, %options);
 }
@@ -64,8 +76,8 @@ sub verify {
 sub when {
     my ($mock) = @_;
 
-    (defined $mock && MockType->check($mock))
-       || croak 'when() must be given a mock object';
+    croak 'when() must be given a mock object'
+        unless defined $mock && MockType->check($mock);
 
     return When->new(mock => $mock);
 }
@@ -74,14 +86,26 @@ sub at_least {
     warnings::warnif('deprecated', 'at_least() is deprecated');
 
     my ($n) = @_;
-    return sub { $n <= $_[0] }
+    croak "at_least() must be given a number"
+        unless ! defined $n || looks_like_number $n;
+
+    return sub {
+        my ($invocations, $name, $tb) = @_;
+        $tb->cmp_ok($invocations, '>=', $n, $name);
+    }
 }
 
 sub at_most {
     warnings::warnif('deprecated', 'at_most() is deprecated');
 
     my ($n) = @_;
-    return sub { $n >= $_[0] }
+    croak "at_most() must be given a number"
+        unless ! defined $n || looks_like_number $n;
+
+    return sub {
+        my ($invocations, $name, $tb) = @_;
+        $tb->cmp_ok($invocations, '<=', $n, $name);
+    }
 }
 
 1;

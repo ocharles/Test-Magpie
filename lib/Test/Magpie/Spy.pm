@@ -5,8 +5,7 @@ use namespace::autoclean;
 
 use aliased 'Test::Magpie::Invocation';
 
-use List::AllUtils qw( first );
-use MooseX::Types::Moose qw( ArrayRef Str );
+use MooseX::Types::Moose qw( HashRef Str );
 use Test::Builder;
 use Test::Magpie::Util qw( extract_method_name get_attribute_value );
 
@@ -14,30 +13,14 @@ with 'Test::Magpie::Role::HasMock';
 
 my $TB = Test::Builder->new;
 
-my %INVOCATION_TESTS = (
-    at_least => sub {
-        my ($n) = @_;
-        return sub { $n <= $_[0] };
-    },
-    at_most => sub {
-        my ($n) = @_;
-        return sub { $n >= $_[0] };
-    },
-    times => sub {
-        my ($n) = @_;
-        return sub { $n == $_[0] };
-    },
-);
-
 has 'name' => (
     isa => Str,
     is => 'bare',
 );
 
-has 'invocation_counters' => (
-    isa => ArrayRef,
+has 'verification' => (
+    isa => HashRef,
     is => 'bare',
-    default => sub { [] },
 );
 
 around 'BUILDARGS' => sub {
@@ -45,16 +28,11 @@ around 'BUILDARGS' => sub {
     my $self = shift;
     my $args = $self->$orig(@_);
 
-    # create invocation_counters out of times, at_least and at_most options
-    my @invocation_counters;
-    foreach (grep {defined $args->{$_}} qw[times at_least at_most]) {
-        my $times = delete $args->{$_};
-
-        # $times is a coderef if at_least() or at_most() are used
-        push @invocation_counters,
-            !ref($times) ? $INVOCATION_TESTS{$_}->($times) : $times;
-    }
-    $args->{ invocation_counters } = \@invocation_counters;
+    $args->{verification} = {
+        map  { $_ => delete $args->{$_} }
+        grep { defined $args->{$_} }
+        qw( times at_least at_most )
+    };
 
     return $args;
 };
@@ -69,23 +47,32 @@ sub AUTOLOAD {
         arguments   => \@_,
     );
 
-    my $mock = get_attribute_value($self, 'mock');
-    my $invocations = get_attribute_value($mock, 'invocations');
+    my $mock         = get_attribute_value($self, 'mock');
+    my $invocations  = get_attribute_value($mock, 'invocations');
+    my $verification = get_attribute_value($self, 'verification');
 
     my $matches = grep { $observe->satisfied_by($_) } @$invocations;
-
-    my $invocation_counters = get_attribute_value($self, 'invocation_counters');
-    my $test = 1;
-    foreach (@$invocation_counters) {
-        $test &&= $_->($matches);
-        last if ! $test;
-    }
 
     my $name = get_attribute_value($self, 'name') ||
         sprintf("%s was invoked the correct number of times",
             $observe->as_string);
 
-    $TB->ok($test, $name);
+    if (defined $verification->{times}) {
+        if (ref $verification->{times} eq 'CODE') {
+            # handle use of at_least() and at_most()
+            $verification->{times}->( $matches, $name, $TB );
+        }
+        else {
+            $TB->is_num( $matches, $verification->{times}, $name );
+        }
+    }
+    elsif (defined $verification->{at_least}) {
+        $TB->cmp_ok( $matches, '>=', $verification->{at_least}, $name );
+    }
+    elsif (defined $verification->{at_most}) {
+        $TB->cmp_ok( $matches, '<=', $verification->{at_most}, $name );
+    }
+
     return;
 }
 
@@ -104,5 +91,13 @@ test.
 
 You may use argument matchers in verification method calls.
 
-=cut
+=attr name
 
+The name of the test that is printed to screen when the test is executed.
+
+=attr verification
+
+The test to be applied. It is specified as a HashRef that maps the type of test
+to the test parameters.
+
+=cut
