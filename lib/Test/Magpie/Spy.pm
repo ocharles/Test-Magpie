@@ -31,7 +31,7 @@ around 'BUILDARGS' => sub {
     $args->{verification} = {
         map  { $_ => delete $args->{$_} }
         grep { defined $args->{$_} }
-        qw( times at_least at_most )
+        qw( times at_least at_most between )
     };
 
     return $args;
@@ -72,6 +72,10 @@ sub AUTOLOAD {
     elsif (defined $verification->{at_most}) {
         $TB->cmp_ok( $matches, '<=', $verification->{at_most}, $name );
     }
+    elsif (defined $verification->{between}) {
+        my ($lower, $upper) = @{ $verification->{between} };
+        $TB->ok( $lower <= $matches && $matches <= $upper, $name );
+    }
 
     return;
 }
@@ -96,6 +100,11 @@ You may use argument matchers in verification method calls.
 The name of the test that is printed to screen when the test is executed.
 
 =attr verification
+
+    times => 1
+    at_least => 3
+    at_most => 5
+    between => [3, 5]
 
 The test to be applied. It is specified as a HashRef that maps the type of test
 to the test parameters.

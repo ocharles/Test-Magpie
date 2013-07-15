@@ -10,7 +10,7 @@ use aliased 'Test::Magpie::When';
 
 use Carp qw( croak );
 use Scalar::Util qw( looks_like_number );
-use Test::Magpie::Types Mock => { -as => 'MockType' };
+use Test::Magpie::Types 'NumRange', Mock => { -as => 'MockType' };
 
 use Sub::Exporter -setup => {
     exports => [qw(
@@ -41,7 +41,7 @@ sub mock {
 
 sub verify {
     my ($mock, %options) = @_;
-    my @options = qw( times at_least at_most );
+    my @options = qw( times at_least at_most between );
     my @used_options = grep { defined $options{$_} } @options;
 
     croak 'verify() must be given a mock object'
@@ -51,21 +51,27 @@ sub verify {
         . join ', ', map {"'$_'"} @options
         unless scalar @used_options <= 1;
 
-    croak "'times' option must be a number" unless (
-        ! defined $options{times} ||
-        looks_like_number $options{times} ||
-        ref $options{times} eq 'CODE'
-    );
-
-    croak "'at_least' option must be a number" unless (
-        ! defined $options{at_least} ||
-        looks_like_number $options{at_least}
-    );
-
-    croak "'at_most' option must be a number" unless (
-        ! defined $options{at_most} ||
-        looks_like_number $options{at_most}
-    );
+    if (defined $options{times}) {
+        croak "'times' option must be a number" unless (
+            looks_like_number $options{times} ||
+            ref $options{times} eq 'CODE'
+        );
+    }
+    elsif (defined $options{at_least}) {
+        croak "'at_least' option must be a number"
+            unless looks_like_number $options{at_least};
+    }
+    elsif (defined $options{at_most}) {
+        croak "'at_most' option must be a number"
+            unless looks_like_number $options{at_most};
+    }
+    elsif (defined $options{between}) {
+        croak "'between' option must be an arrayref "
+            . "with 2 numbers in ascending order" unless (
+            NumRange->check( $options{between} ) &&
+            $options{between}[0] < $options{between}[1]
+        );
+    }
 
     # set default option
     $options{times} = 1 if @used_options == 0;
@@ -181,16 +187,29 @@ C<%options> contains a few nice options to help make verification easier:
 
 =item times
 
+    verify($mock, times => 3)->method
+
 Specifies the number of times the given method is expected to be called. The
 default is 1 if no other option is specified.
 
 =item at_least
 
+    verify($mock, at_least => 3)->method
+
 Specifies the minimum number of times the given method is expected to be called.
 
 =item at_most
 
+    verify($mock, at_most => 5)->method
+
 Specifies the maximum number of times the given method is expected to be called.
+
+=item between
+
+    verify($mock, between => [3, 5])->method
+
+Specifies the minimum and maximum number of times the given method is expected
+to be called.
 
 =back
 

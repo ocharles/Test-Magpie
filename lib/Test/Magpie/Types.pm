@@ -1,6 +1,11 @@
 package Test::Magpie::Types;
 # ABSTRACT: Type constraints used by Magpie
-use MooseX::Types -declare => [qw( Mock )];
+use MooseX::Types -declare => [qw( Mock NumRange )];
+
+use MooseX::Types::Moose qw( Num );
+use MooseX::Types::Structured qw( Tuple );
+
+subtype NumRange, as Tuple[Num, Num];
 
 class_type Mock, { class => 'Test::Magpie::Mock' };
 
