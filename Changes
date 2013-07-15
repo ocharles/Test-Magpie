@@ -1,5 +1,11 @@
 Revision history for Test-Magpie
 
+0.07    2013-07-15
+        Deprecated at_least() and at_most() functions
+        Added verify() options: at_least, at_most and between
+        Added argument checks for public functions
+        Added more comprehensive tests
+
 0.06    2013-07-03
         Enable calling ref() on mock object to return a specified type
 
