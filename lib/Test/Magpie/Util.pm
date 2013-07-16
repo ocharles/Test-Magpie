@@ -2,9 +2,10 @@ package Test::Magpie::Util;
 # ABSTRACT: Utilities used by Test::Magpie
 use strict;
 use warnings;
-use 5.010_001; # dependency for smartmatching
 
-use aliased 'Test::Magpie::ArgumentMatcher';
+# smartmatch dependencies
+use 5.010;
+no if $] >= 5.017011, warnings => 'experimental::smartmatch';
 
 use Scalar::Util qw( blessed looks_like_number refaddr );
 use Moose::Util qw( find_meta );
