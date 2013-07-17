@@ -38,13 +38,14 @@ sub satisfied_by {
     my @input = $invocation->arguments;
     my @expected = $self->arguments;
     while (@input && @expected) {
-        my $matcher = shift(@expected);
+        my $matcher = shift @expected;
+
         if (ref($matcher) eq ArgumentMatcher) {
             @input = $matcher->match(@input);
         }
         else {
-            my $value = shift(@input);
-            @input = undef unless match($value, $matcher);
+            my $value = shift @input;
+            return '' if !match($value, $matcher);
         }
     }
     return @input == 0 && @expected == 0;

@@ -6,7 +6,7 @@ use 5.010_001; # dependency for smartmatching
 
 use aliased 'Test::Magpie::ArgumentMatcher';
 
-use Scalar::Util qw( blessed );
+use Scalar::Util qw( blessed looks_like_number refaddr );
 use Moose::Util qw( find_meta );
 
 use Sub::Exporter -setup => {
@@ -44,9 +44,46 @@ sub has_caller_package {
 
 sub match {
     my ($a, $b) = @_;
-    return blessed($a)
-        ? (ref($a) eq ref($b) && $a == $b)
-        : $a ~~ $b;
+
+    # This function uses smart matching, but we need to limit the scenarios
+    # in which it is used because of its quirks.
+
+    # ref types must match
+    return if ref($a) ne ref($b);
+
+    # objects match only if they are the same object
+    if (blessed($a) || ref($a) eq 'CODE') {
+        return refaddr($a) == refaddr($b);
+    }
+
+    # don't smartmatch on arrays because it recurses
+    # which leads to the same quirks that we want to avoid
+    if (ref($a) eq 'ARRAY') {
+        return if $#{$a} != $#{$b};
+
+        # recurse to handle nested structures
+        foreach (0 .. $#{$a}) {
+            return if !match( $a->[$_], $b->[$_] );
+        }
+        return 1;
+    }
+
+    # smartmatch only matches hash keys
+    # but we want to match the values too
+    if (ref($a) eq 'HASH') {
+        return unless $a ~~ $b;
+
+        foreach (keys %$a) {
+            return if !match( $a->{$_}, $b->{$_} );
+        }
+        return 1;
+    }
+
+    # avoid smartmatch doing number matches on strings
+    # e.g. '5x' ~~ 5 is true
+    return if looks_like_number($a) xor looks_like_number($b);
+
+    return $a ~~ $b;
 }
 
 1;
