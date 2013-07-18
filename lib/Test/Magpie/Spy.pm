@@ -53,27 +53,34 @@ sub AUTOLOAD {
 
     my $matches = grep { $observe->satisfied_by($_) } @$invocations;
 
-    my $name = get_attribute_value($self, 'name') ||
-        sprintf("%s was invoked the correct number of times",
-            $observe->as_string);
+    my $name = get_attribute_value($self, 'name');
 
     if (defined $verification->{times}) {
         if (ref $verification->{times} eq 'CODE') {
             # handle use of at_least() and at_most()
-            $verification->{times}->( $matches, $name, $TB );
+            $verification->{times}->(
+                $matches, $observe->as_string, $name, $TB);
         }
         else {
+            $name ||= sprintf '%s was called %u time(s)',
+                $observe->as_string, $verification->{times};
             $TB->is_num( $matches, $verification->{times}, $name );
         }
     }
     elsif (defined $verification->{at_least}) {
+        $name ||= sprintf '%s was called at least %u time(s)',
+            $observe->as_string, $verification->{at_least};
         $TB->cmp_ok( $matches, '>=', $verification->{at_least}, $name );
     }
     elsif (defined $verification->{at_most}) {
+        $name ||= sprintf '%s was called at most %u time(s)',
+            $observe->as_string, $verification->{at_most};
         $TB->cmp_ok( $matches, '<=', $verification->{at_most}, $name );
     }
     elsif (defined $verification->{between}) {
         my ($lower, $upper) = @{ $verification->{between} };
+        $name ||= sprintf '%s was called between %u and %u time(s)',
+            $observe->as_string, $lower, $upper;
         $TB->ok( $lower <= $matches && $matches <= $upper, $name );
     }
 
