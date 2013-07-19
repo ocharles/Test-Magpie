@@ -1,7 +1,37 @@
 package Test::Magpie::Mock;
-# ABSTRACT: A mock object
+# ABSTRACT: Mock objects
+
 use Moose -metaclass => 'Test::Magpie::Meta::Class';
 use namespace::autoclean;
+
+=head1 SYNOPSIS
+
+    # create a mock object
+    my $mock = mock(); # from Test::Magpie
+    my $mock_with_class = mock('AnyRef');
+
+    # mock objects pretend to be anything you want them to be
+    $true = $mock->isa('AnyClass');
+    $true = $mock->does('AnyRole');
+    $true = $mock->DOES('AnyRole');
+    $ref  = ref($mock_with_class); # AnyRef
+
+    # call any method with any arguments
+    $method_ref = $mock->can('any_method');
+    $mock->any_method(@arguments);
+
+=head1 DESCRIPTION
+
+Mock objects are the objects you pass around as if they were real objects. They
+do not have a defined API; any method may be called. Additionally, you can
+create stubs to specify responses (return values or exceptions) to method
+calls.
+
+A mock objects records every method called on it along with their arguments.
+These records may then be used for verifying that the correct interactions
+occured.
+
+=cut
 
 use aliased 'Test::Magpie::Invocation';
 use aliased 'Test::Magpie::Stub';
@@ -16,11 +46,29 @@ use MooseX::Types::Moose qw( ArrayRef Int Str );
 use MooseX::Types::Structured qw( Map );
 use UNIVERSAL::ref;
 
+our $AUTOLOAD;
+
+=attr class
+
+The name of the class that the object is pretending to be blessed into. Calling
+C<ref()> on the mock object will return this class name.
+
+=cut
+
 has 'class' => (
     isa => Str,
     reader => 'ref',
     default => __PACKAGE__,
 );
+
+=attr invocations
+
+An array reference containing a record of all methods invoked on this mock.
+These are used for verification and inspection.
+
+This attribute is internal, and not publically accessible.
+
+=cut
 
 has 'invocations' => (
     isa => ArrayRef[Invocation],
@@ -28,13 +76,22 @@ has 'invocations' => (
     default => sub { [] }
 );
 
+=attr stubs
+
+Contains all of the methods stubbed for this mock. It maps the method name to
+an array of stubs. Stubs are matched against invocation arguments to determine
+which stub to dispatch to.
+
+This attribute is internal, and not publically accessible.
+
+=cut
+
 has 'stubs' => (
     isa => Map[ Str, ArrayRef[Stub] ],
     is => 'bare',
     default => sub { {} }
 );
 
-our $AUTOLOAD;
 sub AUTOLOAD {
     my $self = shift;
     my $method_name = extract_method_name($AUTOLOAD);
@@ -58,14 +115,18 @@ sub AUTOLOAD {
                 $stub->_has_executions
             );
         }
-        return;
     }
+    return;
 }
 
-sub does {
-    return if has_caller_package('UNIVERSAL::ref');
-    return 1;
-}
+=method isa
+
+    $true = $mock->isa('AnyClass');
+
+This always returns true. It allows the mock object to C<isa()> any class that
+it is required.
+
+=cut
 
 sub isa {
     my ($self, $package) = @_;
@@ -76,47 +137,52 @@ sub isa {
     return 1;
 }
 
-__PACKAGE__->meta->make_immutable;
-1;
+=method does
 
-=head1 DESCRIPTION
+    $true = $mock->does('AnyRole');
+    $true = $mock->DOES('AnyRole');
 
-Mock objects are the objects you pass around as if they were real objects. They
-do not have a defined API; any method call is valid. A mock on its own is in
-record mode - method calls and arguments will be saved. You can switch
-temporarily to stub and verification mode with C<when> and C<verify> in
-L<Test::Magpie>, respectively.
+This always returns true. It allows the mock object to C<does()> any role that
+is required.
 
-=attr class
+=cut
 
-This attribute is the name of the class that the object is pretending to be
-blessed into. This is only needed if you call C<ref()> on the object and want
-it to return a particular type.
-
-=attr stubs
-
-This attribute is internal, and not publically accessible.
-
-Returns a map of method name to stub array references. Stubs are matched against
-invocation arguments to determine which stub to dispatch to.
-
-=attr invocations
-
-This attribute is internal, and not publically accessible.
-
-Returns an array reference of all method invocations on this mock.
-
-=method isa $class
-
-Forced to return true for any package
-
-=method does $role
-
-Forced to return true for any role
+sub does {
+    return if has_caller_package('UNIVERSAL::ref');
+    return 1;
+}
 
 =method ref
 
-Returns the value of the object's C<class> attribute. This also works if you
-call C<ref()> as a function instead of a method.
+    $mock  = mock('AnyRef');
+    $class = $mock->ref;  # or ref($mock)
+
+Returns the object's C<class> attribute value. This also works if you call
+C<ref()> as a function instead of a method.
+
+If the object's C<class> attribute has not been set, then it will fallback to
+returning the name of this class.
+
+set.
 
 =cut
+
+=method can
+
+    $method_ref = $mock->can('any_method');
+
+Always returns a reference to the C<AUTOLOAD()> method. It allows the mock
+object to C<can()> do any method that is required.
+
+=cut
+
+sub can {
+    my ($self, $method_name) = @_;
+    return sub {
+        $AUTOLOAD = $method_name;
+        goto &AUTOLOAD;
+    };
+}
+
+__PACKAGE__->meta->make_immutable;
+1;

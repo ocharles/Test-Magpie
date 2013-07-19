@@ -1,5 +1,6 @@
 package Test::Magpie::Util;
-# ABSTRACT: Utilities used by Test::Magpie
+# ABSTRACT: Internal utility functions for Test::Magpie
+
 use strict;
 use warnings;
 
@@ -19,11 +20,29 @@ use Sub::Exporter -setup => {
     )],
 };
 
+=func extract_method_name
+
+    $method_name = extract_method_name($full_method_name)
+
+From a fully qualified method name such as Foo::Bar::baz, will return
+just the method name (in this example, baz).
+
+=cut
+
 sub extract_method_name {
-    my $name = shift;
-    my ($method) = $name =~ qr/:([^:]+)$/;
-    return $method;
+    my ($method_name) = @_;
+    $method_name =~ s/.*:://;
+    return $method_name;
 }
+
+=func get_attribute_value
+
+    $value = get_attribute_value($object, $attr_name)
+
+Gets value of Moose attributes that have no accessors by accessing the class'
+underlying meta-object.
+
+=cut
 
 sub get_attribute_value {
     my ($object, $attribute) = @_;
@@ -32,6 +51,14 @@ sub get_attribute_value {
         ->find_attribute_by_name($attribute)
         ->get_value($object);
 }
+
+=func has_caller_package
+
+    $bool = has_caller_package($package_name)
+
+Returns whether the given C<$package> is in the current call stack.
+
+=cut
 
 sub has_caller_package {
     my $package= shift;
@@ -42,6 +69,14 @@ sub has_caller_package {
     }
     return;
 }
+
+=func match
+
+    $bool = match($a, $b)
+
+Match 2 values for equality.
+
+=cut
 
 sub match {
     my ($a, $b) = @_;
@@ -88,30 +123,3 @@ sub match {
 }
 
 1;
-
-=func extract_method_name
-
-    $method_name = extract_method_name($full_method_name)
-
-Internal. From a fully qualified method name such as Foo::Bar::baz, will return
-just the method name (in this example, baz).
-
-=func has_caller_package
-
-    $bool = has_caller_package($package_name)
-
-Internal. Returns whether the given C<$package> is in the current call stack.
-
-=func get_attribute_value
-
-    $value = get_attribute_value($object, $attr_name)
-
-Internal. Gets value of Moose attributes that have no accessors by accessing
-the class' underlying meta-object.
-
-=func match
-
-Internal. Match 2 values for equality
-
-=cut
-
