@@ -1,5 +1,10 @@
 Revision history for Test-Magpie
 
+0.08    2013-07-22
+        Fixed use of smartmatching and removed warnings
+        Improved verify() print messages
+        Added Mock::can() method
+
 0.07    2013-07-15
         Deprecated at_least() and at_most() functions
         Added verify() options: at_least, at_most and between
