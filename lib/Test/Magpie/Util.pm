@@ -6,7 +6,7 @@ use warnings;
 
 # smartmatch dependencies
 use 5.010;
-no if $] >= 5.017011, warnings => 'experimental::smartmatch';
+use experimental 'smartmatch';
 
 use Scalar::Util qw( blessed looks_like_number refaddr );
 use Moose::Util qw( find_meta );
