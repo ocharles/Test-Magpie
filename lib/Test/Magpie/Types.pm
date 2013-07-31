@@ -1,5 +1,6 @@
 package Test::Magpie::Types;
 # ABSTRACT: Type constraints used by Magpie
+
 use MooseX::Types -declare => [qw( Mock NumRange )];
 
 use MooseX::Types::Moose qw( Num );

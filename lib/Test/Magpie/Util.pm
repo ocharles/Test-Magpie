@@ -6,19 +6,18 @@ use warnings;
 
 # smartmatch dependencies
 use 5.010;
-use experimental 'smartmatch';
+use experimental qw( smartmatch );
 
+use Exporter qw( import );
 use Scalar::Util qw( blessed looks_like_number refaddr );
 use Moose::Util qw( find_meta );
 
-use Sub::Exporter -setup => {
-    exports => [qw(
-        extract_method_name
-        get_attribute_value
-        has_caller_package
-        match
-    )],
-};
+our @EXPORT_OK = qw(
+    extract_method_name
+    get_attribute_value
+    has_caller_package
+    match
+);
 
 =func extract_method_name
 

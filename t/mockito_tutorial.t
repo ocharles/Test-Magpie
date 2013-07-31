@@ -7,8 +7,8 @@ use Test::More;
 
 use MooseX::Types::Moose qw( Int );
 
+use Test::Magpie;
 use Test::Magpie::ArgumentMatcher qw( type custom_matcher );
-use Test::Magpie qw( mock verify when at_least at_most );
 
 subtest 'Lets verify some behaviour!' => sub {
     my $mocked_list = mock;
@@ -56,8 +56,8 @@ subtest 'Verifying the amount of invocations' => sub {
     verify($list, times => 3)->add('three');
     verify($list, times => 0)->add('never');
 
-    verify($list, times => at_least(1))->add('three');
-    verify($list, times => at_most(2))->add('two');
+    verify($list, at_least => 1)->add('three');
+    verify($list, at_most => 2)->add('two');
 };
 
 done_testing;

@@ -1,5 +1,6 @@
 package Test::Magpie;
 # ABSTRACT: Spy on objects to achieve test doubles (mock testing)
+
 use strict;
 use warnings;
 
@@ -9,15 +10,34 @@ use aliased 'Test::Magpie::Spy';
 use aliased 'Test::Magpie::When';
 
 use Carp qw( croak );
+use Exporter qw( import );
 use Scalar::Util qw( looks_like_number );
 use Test::Magpie::Types 'NumRange', Mock => { -as => 'MockType' };
 
-use Sub::Exporter -setup => {
-    exports => [qw(
-        inspect mock when verify
-        at_least at_most
-    )]
-};
+=head1 EXPORTS
+
+This module exports the following functions by default:
+
+=for :list
+* mock
+* when
+* verify
+
+All other functions need to be imported explicitly.
+
+=cut
+
+our @EXPORT = qw(
+    inspect
+    mock
+    when
+    verify
+);
+our @EXPORT_OK = qw(
+    at_least
+    at_most
+    inspect
+);
 
 sub inspect {
     my ($mock) = @_;
