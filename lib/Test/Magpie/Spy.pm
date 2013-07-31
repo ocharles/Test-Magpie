@@ -1,5 +1,6 @@
 package Test::Magpie::Spy;
-# ABSTRACT: A look into the invocation history of a mock for verifaciotn
+# ABSTRACT: Look into the invocation history of a mock for verification
+
 use Moose;
 use namespace::autoclean;
 
@@ -38,6 +39,7 @@ around 'BUILDARGS' => sub {
 };
 
 our $AUTOLOAD;
+
 sub AUTOLOAD {
     my $self = shift;
     my $method_name = extract_method_name($AUTOLOAD);

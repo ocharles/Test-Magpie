@@ -1,5 +1,6 @@
 package Test::Magpie::Invocation;
 # ABSTRACT: Represents an invocation of a method
+
 use Moose;
 use namespace::autoclean;
 
@@ -18,7 +19,6 @@ Returns a list of all arguments passed to the method call.
 
 =attr method_name
 
-The name of the method invoked;
+The name of the method invoked.
 
 =cut
-

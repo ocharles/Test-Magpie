@@ -1,9 +1,6 @@
 package Test::Magpie::Mock;
 # ABSTRACT: Mock objects
 
-use Moose -metaclass => 'Test::Magpie::Meta::Class';
-use namespace::autoclean;
-
 =head1 SYNOPSIS
 
     # create a mock object
@@ -32,6 +29,9 @@ These records may then be used for verifying that the correct interactions
 occured.
 
 =cut
+
+use Moose -metaclass => 'Test::Magpie::Meta::Class';
+use namespace::autoclean;
 
 use aliased 'Test::Magpie::Invocation';
 use aliased 'Test::Magpie::Stub';
@@ -121,10 +121,10 @@ sub AUTOLOAD {
 
 =method isa
 
-    $true = $mock->isa('AnyClass');
+Always returns true. It allows the mock object to C<isa()> any class that
+is required.
 
-This always returns true. It allows the mock object to C<isa()> any class that
-it is required.
+    $true = $mock->isa('AnyClass');
 
 =cut
 
@@ -139,11 +139,11 @@ sub isa {
 
 =method does
 
+Always returns true. It allows the mock object to C<does()> any role that
+is required.
+
     $true = $mock->does('AnyRole');
     $true = $mock->DOES('AnyRole');
-
-This always returns true. It allows the mock object to C<does()> any role that
-is required.
 
 =cut
 
@@ -154,25 +154,23 @@ sub does {
 
 =method ref
 
-    $mock  = mock('AnyRef');
-    $class = $mock->ref;  # or ref($mock)
-
 Returns the object's C<class> attribute value. This also works if you call
 C<ref()> as a function instead of a method.
 
+    $mock  = mock('AnyRef');
+    $class = $mock->ref;  # or ref($mock)
+
 If the object's C<class> attribute has not been set, then it will fallback to
 returning the name of this class.
-
-set.
 
 =cut
 
 =method can
 
-    $method_ref = $mock->can('any_method');
-
 Always returns a reference to the C<AUTOLOAD()> method. It allows the mock
 object to C<can()> do any method that is required.
+
+    $method_ref = $mock->can('any_method');
 
 =cut
 

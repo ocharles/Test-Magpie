@@ -1,8 +1,67 @@
-package Test::Magpie;
-# ABSTRACT: Spy on objects to achieve test doubles (mock testing)
-
 use strict;
 use warnings;
+package Test::Magpie;
+# ABSTRACT: Mocking framework with method stubs and behaviour verification
+
+=head1 SYNOPSIS
+
+    use Test::Magpie;
+
+    # create the mock object and stub
+    my $baker = mock;
+    when($mock)->bake_loaf('white')->then_return($bread);
+
+    # execute the code under test
+    my $bakery = Bakery->new( bakers => [ $baker ] );
+    my @loaves = $bakery->buy_loaf( amount => 2, type => 'white' );
+
+    # verify the interactions with the mock object
+    verify($baker, times => 2)->bake_loaf('white');
+
+=head1 DESCRIPTION
+
+Test::Magpie is a test double framework heavily inspired by the Mockito
+framework for Java, and also the Python-Mockito project. In Mockito, you "spy"
+on objects for their behaviour, rather than being upfront about what should
+happen. I find this approach to be significantly more flexible and easier to
+work with than mocking systems like EasyMock, so I created a Perl
+implementation.
+
+=begin :list
+
+= Mock objects
+
+Mock objects, represented by L<Test::Magpie::Mock> objects, are objects that
+pretend to be everything you could ever want them to be. A mock object can have
+any method called on it, does every roles, and isa subclass of any superclass.
+This allows you to easily throw a mock object around it will be treated as
+though it was a real object.
+
+= Method stubbing
+
+Any method can be called on a mock object, and it will be logged as an
+invocation. By default, method calls return C<undef> in scalar context or an
+empty list in list context. Often, though, clients will be interested in the
+result of calling a method with some arguments. So you may specify how a
+method stub should respond when it is called.
+
+= Verify interactions
+
+After calling your concrete code (the code under test) you may want to check
+that the code did operate correctly on the mock. To do this, you can use
+verifications to make sure code was called, with correct parameters and the
+correct amount of times.
+
+= Argument matching
+
+Magpie gives you some helpful methods to validate arguments passed in to calls.
+You can check equality between arguments, or consume a general type of argument,
+or consume multiple arguments. See L<Test::Magpie::ArgumentMatcher> for the
+juicy details.
+
+=end :list
+
+=cut
 
 use aliased 'Test::Magpie::Inspect';
 use aliased 'Test::Magpie::Mock';
@@ -28,7 +87,6 @@ All other functions need to be imported explicitly.
 =cut
 
 our @EXPORT = qw(
-    inspect
     mock
     when
     verify
@@ -39,14 +97,20 @@ our @EXPORT_OK = qw(
     inspect
 );
 
-sub inspect {
-    my ($mock) = @_;
+=func mock
 
-    croak 'inspect() must be given a mock object'
-        unless defined $mock && MockType->check($mock);
+C<mock()> constructs a new instance of a mock object.
 
-    return Inspect->new(mock => $mock);
-}
+    $mock = mock;
+    $mock->method(@args);
+
+C<$class> is an optional argument to set the type that the mock object is
+blessed into. This value will be returned when C<ref()> is called on the object.
+
+    $mock = mock($class);
+    is( ref($mock), $class );
+
+=cut
 
 sub mock {
     return Mock->new if @_ == 0;
@@ -58,6 +122,61 @@ sub mock {
 
     return Mock->new(class => $class);
 }
+
+=func when
+
+C<when()> is used to tell the method stub to return some value(s) or to raise
+an exception.
+
+    when($mock)->method(@args)->then_return(1, 2, 3);
+    when($mock)->invalid(@args)->then_die('exception');
+
+=cut
+
+sub when {
+    my ($mock) = @_;
+
+    croak 'when() must be given a mock object'
+        unless defined $mock && MockType->check($mock);
+
+    return When->new(mock => $mock);
+}
+
+=func verify
+
+C<verify()> is used to check the interactions on your mock object and prints
+the test result. C<verify()> plays nicely with L<Test::Simple> and Co - it
+depends on them for setting a test plan and its calls are counted in the test
+plan.
+
+    verify($mock)->method(@args)
+    # prints: ok 1 - method("foo") was called 1 time(s)
+
+C<verify()> accepts a few options to help your verifications:
+
+    verify( $mock, times    => 3       )->method(@args)
+    verify( $mock, at_least => 3       )->method(@args)
+    verify( $mock, at_most  => 5       )->method(@args)
+    verify( $mock, between  => [3, 5]  )->method(@args)
+    verify( $mock, name     => 'calls' )->method(@args)
+
+=for :list
+= times
+Specifies the number of times the given method is expected to be called. The
+default is 1 if no other option is specified.
+= at_least
+Specifies the minimum number of times the given method is expected to be
+called.
+= at_most
+Specifies the maximum number of times the given method is expected to be
+called.
+= between
+Specifies the minimum and maximum number of times the given method is expected
+to be called.
+= name
+Specifies a custom test name to be printed when the test is executed.
+
+=cut
 
 sub verify {
     my ($mock, %options) = @_;
@@ -99,14 +218,35 @@ sub verify {
     return Spy->new(mock => $mock, %options);
 }
 
-sub when {
+=func inspect
+
+Inspect method invocations on a mock object.
+
+    $invocation = inspect($mock)->method(@args);
+    is( $invocation->method_name, 'foo' );
+    is_deeply( [$invocation->arguments], [qw( bar baz )] );
+
+=cut
+
+sub inspect {
     my ($mock) = @_;
 
-    croak 'when() must be given a mock object'
+    croak 'inspect() must be given a mock object'
         unless defined $mock && MockType->check($mock);
 
-    return When->new(mock => $mock);
+    return Inspect->new(mock => $mock);
 }
+
+=func at_least (deprecated)
+
+Used with C<verify()> to verify that a method was invoked at least C<$n> times.
+
+    verify($mock, times => at_least($n))->method(@args);
+
+This function has been deprecated. Use the C<at_least> option for C<verify()>
+instead.
+
+=cut
 
 sub at_least {
     warnings::warnif('deprecated', 'at_least() is deprecated');
@@ -123,6 +263,17 @@ sub at_least {
         $tb->cmp_ok($invocations, '>=', $n, $name);
     }
 }
+
+=func at_most (deprecated)
+
+Used with C<verify()> to verify that a method was invoked at most C<$n> times.
+
+    verify($mock, times => at_most($n))->method(@args);
+
+This function has been deprecated. Use the C<at_most> option for C<verify()>
+instead.
+
+=cut
 
 sub at_most {
     warnings::warnif('deprecated', 'at_most() is deprecated');
@@ -141,125 +292,3 @@ sub at_most {
 }
 
 1;
-
-=head1 SYNOPSIS
-
-    use Test::Magpie qw( mock verify when );
-
-    my $baker = mock;
-    my $bakery = Bakery->new( bakers => [ $baker ] );
-    my $bread = $bakery->buy_loaf( amount => 2, type => 'white' );
-    verify($baker, times => 2)->bake_loaf('white');
-
-=head1 DESCRIPTION
-
-Test::Magpie is a test double framework heavily inspired by the Mockito
-framework for Java, and also the Python-Mockito project. In Mockito, you "spy"
-on objects for their behaviour, rather than being upfront about what should
-happen. I find this approach to be significantly more flexible and easier to
-work with than mocking systems like EasyMock, so I created a Perl
-implementation.
-
-C<Test::Magpie> doesn't do much, but it does export the main routines that you
-use to interact with the framework.
-
-=head2 Mock objects
-
-Mock objects, represented by L<Test::Magpie::Mock> objects, are objects that
-pretend to be everything you could ever want them to be. A mock object can have
-any method called on it, does every roles, and isa subclass of any superclass.
-This allows you to easily throw a mock object around it will be treated as
-though it was a real object.
-
-=head2 Methods and stubbing
-
-Any method can be called on a mock object, and it will be logged as an
-invocation. Most often though, clients will be more interested in the result of
-calling a method with some arguments, so you may stub methods in order to
-specify what happens at execution.
-
-=head2 Verification
-
-After calling your concrete code (the code under test) you may want to check
-that the code did operate correctly on the mock. To do this, you can use
-verifications to make sure code was called, with correct parameters and the
-correct amount of times.
-
-=head2 Argument matching
-
-Magpie gives you some helpful methods to validate arguments passed in to calls.
-You can check equality between arguments, or consume a general type of argument,
-or consume multiple arguments. See L<Test::Magpie::ArgumentMatcher> for the
-juicy details.
-
-=func mock([$blessed])
-
-Construct a new instance of a mock object.
-
-C<$blessed> is an optional argument to set the type that the mock object is
-blessed into. This value will be returned when C<ref()> is called on the object.
-
-=func verify($mock, [%options])
-
-Begin the verification process on a mock. Takes a mock object, and gives back a
-L<Test::Magpie::Spy>. You don't really need to be concerned about the API of
-this object, you should treat it as the same as the mock object itself. Any
-method calls trigger verification that the given method was passed, and will
-fail if the method was never invoked on the mock object.
-
-C<%options> contains a few nice options to help make verification easier:
-
-=over 4
-
-=item times
-
-    verify($mock, times => 3)->method
-
-Specifies the number of times the given method is expected to be called. The
-default is 1 if no other option is specified.
-
-=item at_least
-
-    verify($mock, at_least => 3)->method
-
-Specifies the minimum number of times the given method is expected to be called.
-
-=item at_most
-
-    verify($mock, at_most => 5)->method
-
-Specifies the maximum number of times the given method is expected to be called.
-
-=item between
-
-    verify($mock, between => [3, 5])->method
-
-Specifies the minimum and maximum number of times the given method is expected
-to be called.
-
-=back
-
-=func when($mock)
-
-Specify a stub method for C<$mock>.
-
-Returns an object that should be treated the same as C<$mock> (that is, having
-all the same methods), but a method call stores a stub method in the mock class,
-rather than an invocation. After specifying the method you wish to stub, you
-will be working with a L<Test::Magpie::Stub>, and you should consult that
-documentation for how to fully specify the stub.
-
-=func inspect($mock)
-
-Inspect method invocations on a mock object. See L<Test::Magpie::Inspect> for
-more information.
-
-=func at_least(Int $n)
-
-Verify that a method was invoked at least C<$n> times
-
-=func at_most(Int $n)
-
-Verify that a method was invoked at most C<$n> times
-
-=cut

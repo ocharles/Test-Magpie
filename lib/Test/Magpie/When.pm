@@ -1,5 +1,6 @@
 package Test::Magpie::When;
 # ABSTRACT: The process of stubbing a mock method call
+
 use Moose;
 use namespace::autoclean;
 
@@ -9,13 +10,14 @@ use Test::Magpie::Util qw( extract_method_name get_attribute_value );
 with 'Test::Magpie::Role::HasMock';
 
 our $AUTOLOAD;
+
 sub AUTOLOAD {
     my $self = shift;
     my $method_name = extract_method_name($AUTOLOAD);
 
     my $stub = Stub->new(
         method_name => $method_name,
-        arguments => \@_
+        arguments   => \@_,
     );
 
     my $mock  = get_attribute_value($self, 'mock');
