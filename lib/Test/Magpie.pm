@@ -152,13 +152,18 @@ plan.
     verify($mock)->method(@args)
     # prints: ok 1 - method("foo") was called 1 time(s)
 
+C<verify()> accepts an optional C<$test_name> to print a custom name for the
+test instead of the default.
+
+    verify($mock, $test_name)->method(@args)
+    # prints: ok 1 - record inserted into database'
+
 C<verify()> accepts a few options to help your verifications:
 
-    verify( $mock, times    => 3       )->method(@args)
-    verify( $mock, at_least => 3       )->method(@args)
-    verify( $mock, at_most  => 5       )->method(@args)
-    verify( $mock, between  => [3, 5]  )->method(@args)
-    verify( $mock, name     => 'calls' )->method(@args)
+    verify( $mock, times    => 3,     )->method(@args)
+    verify( $mock, at_least => 3      )->method(@args)
+    verify( $mock, at_most  => 5      )->method(@args)
+    verify( $mock, between  => [3, 5] )->method(@args)
 
 =for :list
 = times
@@ -173,22 +178,28 @@ called.
 = between
 Specifies the minimum and maximum number of times the given method is expected
 to be called.
-= name
-Specifies a custom test name to be printed when the test is executed.
+
+A C<$test_name> may also be supplied after the option.
+
+    verify($mock, times => 3, $test_name)->method(@args)
 
 =cut
 
 sub verify {
-    my ($mock, %options) = @_;
-    my @options = qw( times at_least at_most between );
-    my @used_options = grep { defined $options{$_} } @options;
+    my $mock = shift;
+    my $test_name;
+    $test_name = pop if (@_ % 2 == 1);
+    my %options = @_;
+
+    # set default option if none given
+    $options{times} = 1 if keys %options == 0;
 
     croak 'verify() must be given a mock object'
         unless defined $mock && MockType->check($mock);
 
     croak 'You can set only one of these options: '
-        . join ', ', map {"'$_'"} @options
-        unless scalar @used_options <= 1;
+        . join ', ', map {"'$_'"} keys %options
+        unless keys %options == 1;
 
     if (defined $options{times}) {
         croak "'times' option must be a number" unless (
@@ -212,8 +223,8 @@ sub verify {
         );
     }
 
-    # set default option
-    $options{times} = 1 if @used_options == 0;
+    # set test name if given
+    $options{test_name} = $test_name if defined $test_name;
 
     return Spy->new(mock => $mock, %options);
 }
@@ -256,11 +267,12 @@ sub at_least {
         unless ! defined $n || looks_like_number $n;
 
     return sub {
-        my ($invocations, $called, $name, $tb) = @_;
+        my ($invocations, $called, $test_name, $tb) = @_;
 
-        $name ||= sprintf '%s was called at least %u time(s)', $called, $n;
+        $test_name = sprintf '%s was called at least %u time(s)', $called, $n
+            unless defined $test_name;
 
-        $tb->cmp_ok($invocations, '>=', $n, $name);
+        $tb->cmp_ok($invocations, '>=', $n, $test_name);
     }
 }
 
@@ -283,11 +295,12 @@ sub at_most {
         unless ! defined $n || looks_like_number $n;
 
     return sub {
-        my ($invocations, $called, $name, $tb) = @_;
+        my ($invocations, $called, $test_name, $tb) = @_;
 
-        $name ||= sprintf '%s was called at most %u time(s)', $called, $n;
+        $test_name = sprintf '%s was called at most %u time(s)', $called, $n
+            unless defined $test_name;
 
-        $tb->cmp_ok($invocations, '<=', $n, $name);
+        $tb->cmp_ok($invocations, '<=', $n, $test_name);
     }
 }
 

@@ -6,39 +6,38 @@ use namespace::autoclean;
 
 use aliased 'Test::Magpie::Invocation';
 
-use MooseX::Types::Moose qw( HashRef Str );
+use MooseX::Types::Moose qw( Num Str CodeRef );
 use Test::Builder;
+use Test::Magpie::Types qw( NumRange );
 use Test::Magpie::Util qw( extract_method_name get_attribute_value );
 
 with 'Test::Magpie::Role::HasMock';
 
+our $AUTOLOAD;
+
 my $TB = Test::Builder->new;
 
-has 'name' => (
+has 'test_name' => (
     isa => Str,
-    is => 'bare',
+    reader => '_test_name',
 );
 
-has 'verification' => (
-    isa => HashRef,
-    is => 'bare',
+has 'times' => (
+    isa => Num|CodeRef,
+    reader => '_times',
 );
-
-around 'BUILDARGS' => sub {
-    my $orig = shift;
-    my $self = shift;
-    my $args = $self->$orig(@_);
-
-    $args->{verification} = {
-        map  { $_ => delete $args->{$_} }
-        grep { defined $args->{$_} }
-        qw( times at_least at_most between )
-    };
-
-    return $args;
-};
-
-our $AUTOLOAD;
+has 'at_least' => (
+    isa => Num,
+    reader => '_at_least',
+);
+has 'at_most' => (
+    isa => Num,
+    reader => '_at_most',
+);
+has 'between' => (
+    isa => NumRange,
+    reader => '_between',
+);
 
 sub AUTOLOAD {
     my $self = shift;
@@ -49,43 +48,45 @@ sub AUTOLOAD {
         arguments   => \@_,
     );
 
-    my $mock         = get_attribute_value($self, 'mock');
-    my $invocations  = get_attribute_value($mock, 'invocations');
-    my $verification = get_attribute_value($self, 'verification');
+    my $mock        = get_attribute_value($self, 'mock');
+    my $invocations = get_attribute_value($mock, 'invocations');
 
     my $matches = grep { $observe->satisfied_by($_) } @$invocations;
 
-    my $name = get_attribute_value($self, 'name');
+    my $test_name = $self->_test_name;
 
-    if (defined $verification->{times}) {
-        if (ref $verification->{times} eq 'CODE') {
-            # handle use of at_least() and at_most()
-            $verification->{times}->(
-                $matches, $observe->as_string, $name, $TB);
+    if (defined $self->_times) {
+        if ( CodeRef->check($self->_times) ) {
+            # handle use of deprecated at_least() and at_most()
+            $self->_times->(
+                $matches, $observe->as_string, $test_name, $TB);
         }
         else {
-            $name ||= sprintf '%s was called %u time(s)',
-                $observe->as_string, $verification->{times};
-            $TB->is_num( $matches, $verification->{times}, $name );
+            $test_name = sprintf '%s was called %u time(s)',
+                $observe->as_string, $self->_times
+                    unless defined $test_name;
+            $TB->is_num( $matches, $self->_times, $test_name );
         }
     }
-    elsif (defined $verification->{at_least}) {
-        $name ||= sprintf '%s was called at least %u time(s)',
-            $observe->as_string, $verification->{at_least};
-        $TB->cmp_ok( $matches, '>=', $verification->{at_least}, $name );
+    elsif (defined $self->_at_least) {
+        $test_name = sprintf '%s was called at least %u time(s)',
+            $observe->as_string, $self->_at_least
+                unless defined $test_name;
+        $TB->cmp_ok( $matches, '>=', $self->_at_least, $test_name );
     }
-    elsif (defined $verification->{at_most}) {
-        $name ||= sprintf '%s was called at most %u time(s)',
-            $observe->as_string, $verification->{at_most};
-        $TB->cmp_ok( $matches, '<=', $verification->{at_most}, $name );
+    elsif (defined $self->_at_most) {
+        $test_name = sprintf '%s was called at most %u time(s)',
+            $observe->as_string, $self->_at_most
+                unless defined $test_name;
+        $TB->cmp_ok( $matches, '<=', $self->_at_most, $test_name );
     }
-    elsif (defined $verification->{between}) {
-        my ($lower, $upper) = @{ $verification->{between} };
-        $name ||= sprintf '%s was called between %u and %u time(s)',
-            $observe->as_string, $lower, $upper;
-        $TB->ok( $lower <= $matches && $matches <= $upper, $name );
+    elsif (defined $self->_between) {
+        my ($lower, $upper) = @{$self->_between};
+        $test_name = sprintf '%s was called between %u and %u time(s)',
+            $observe->as_string, $lower, $upper
+                unless defined $test_name;
+        $TB->ok( $lower <= $matches && $matches <= $upper, $test_name );
     }
-
     return;
 }
 
@@ -102,20 +103,6 @@ as the mock object itself. The difference being, a method call now checks that
 the method was invoked on the mock at some point in time, and if not, fails a
 test.
 
-You may use argument matchers in verification method calls.
-
-=attr name
-
-The name of the test that is printed to screen when the test is executed.
-
-=attr verification
-
-    times => 1
-    at_least => 3
-    at_most => 5
-    between => [3, 5]
-
-The test to be applied. It is specified as a HashRef that maps the type of test
-to the test parameters.
+You may use argument matchers in verifying method calls.
 
 =cut
