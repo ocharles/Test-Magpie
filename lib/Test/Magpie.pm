@@ -65,7 +65,7 @@ juicy details.
 
 use aliased 'Test::Magpie::Inspect';
 use aliased 'Test::Magpie::Mock';
-use aliased 'Test::Magpie::Spy';
+use aliased 'Test::Magpie::Verify';
 use aliased 'Test::Magpie::When';
 
 use Carp qw( croak );
@@ -226,7 +226,7 @@ sub verify {
     # set test name if given
     $options{test_name} = $test_name if defined $test_name;
 
-    return Spy->new(mock => $mock, %options);
+    return Verify->new(mock => $mock, %options);
 }
 
 =func inspect

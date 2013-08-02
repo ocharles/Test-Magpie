@@ -19,7 +19,7 @@ $mock->twice() for 1..2;
 
 subtest 'verify()' => sub {
     my $spy = verify($mock);
-    isa_ok $spy, 'Test::Magpie::Spy';
+    isa_ok $spy, 'Test::Magpie::Verify';
 
     is get_attribute_value($spy, 'mock'), $mock, 'has mock';
 

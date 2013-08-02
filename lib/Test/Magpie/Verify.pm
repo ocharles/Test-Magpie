@@ -1,4 +1,4 @@
-package Test::Magpie::Spy;
+package Test::Magpie::Verify;
 # ABSTRACT: Look into the invocation history of a mock for verification
 
 use Moose;
