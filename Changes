@@ -1,5 +1,9 @@
 Revision history for Test-Magpie
 
+0.09    2013-08-03
+        Export main functions by default
+        Add optional parameter $test_name to verify()
+
 0.08    2013-07-22
         Fixed use of smartmatching and removed warnings
         Improved verify() print messages
