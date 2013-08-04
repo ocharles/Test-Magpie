@@ -3,7 +3,7 @@ use strict;
 use warnings;
 
 # smartmatch dependency
-use 5.010;
+use 5.010001;
 
 # These tests are to make sure that no unexpected argument matches occur
 # because we are using smartmatching

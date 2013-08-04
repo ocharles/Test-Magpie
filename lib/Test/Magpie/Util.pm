@@ -5,7 +5,7 @@ use strict;
 use warnings;
 
 # smartmatch dependencies
-use 5.010;
+use 5.010001;
 use experimental qw( smartmatch );
 
 use Exporter qw( import );
