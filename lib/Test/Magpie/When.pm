@@ -1,5 +1,5 @@
 package Test::Magpie::When;
-# ABSTRACT: The process of stubbing a mock method call
+# ABSTRACT: Stub mode for a mock object to declare a method stub
 
 use Moose;
 use namespace::autoclean;
@@ -30,14 +30,3 @@ sub AUTOLOAD {
 
 __PACKAGE__->meta->make_immutable;
 1;
-
-=head1 DESCRIPTION
-
-A mock object in stub mode to declare a stubbed method. You generate this by
-calling C<when> in L<Test::Magpie> with a mock object.
-
-This object has the same API as the mock object - any method call will start the
-creation of a L<Test::Magpie::Stub>, which can be modified to tailor the stub
-call. You are probably more interested in that documentation.
-
-=cut
