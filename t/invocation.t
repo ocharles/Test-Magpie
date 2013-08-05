@@ -4,7 +4,7 @@ use warnings;
 
 use Test::More tests => 8;
 
-BEGIN { use_ok 'Test::Magpie', 'mock' }
+BEGIN { use_ok 'Test::Magpie' }
 
 use aliased 'Test::Magpie::Invocation';
 

@@ -5,7 +5,7 @@ use warnings;
 use Test::More;
 use Test::Fatal;
 
-BEGIN { use_ok 'Test::Magpie', qw(mock when) }
+BEGIN { use_ok 'Test::Magpie' }
 
 use aliased 'Test::Magpie::Invocation';
 use Test::Magpie::Util qw( get_attribute_value );
@@ -19,8 +19,6 @@ my $stubs = get_attribute_value($mock, 'stubs');
 subtest 'when()' => sub {
     $when = when($mock);
     isa_ok $when, 'Test::Magpie::When';
-
-    is get_attribute_value($when, 'mock'), $mock, 'has mock';
 
     like exception { when() },
         qr/^when\(\) must be given a mock object/,
