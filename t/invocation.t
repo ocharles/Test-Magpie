@@ -2,13 +2,14 @@
 use strict;
 use warnings;
 
-use Test::More;
+use Test::More tests => 8;
 
 BEGIN { use_ok 'Test::Magpie', 'mock' }
 
-use Test::Magpie::Util qw( get_attribute_value );
+use aliased 'Test::Magpie::Invocation';
 
-use constant Invocation => 'Test::Magpie::Invocation';
+use Test::Magpie::ArgumentMatcher qw( anything );
+use Test::Magpie::Util qw( get_attribute_value );
 
 my $mock = mock;
 ok ! $mock->foo(123, bar => 456), 'mock method invoked';
@@ -19,6 +20,11 @@ isa_ok $invocation, Invocation;
 is $invocation->method_name, 'foo',                    'method_name';
 is_deeply [$invocation->arguments], [123, 'bar', 456], 'arguments';
 is $invocation->as_string, 'foo(123, "bar", 456)',     'as_string';
+
+is Invocation->new(
+    method_name => 'method',
+    arguments => [anything],
+)->as_string, 'method(anything())', 'as_string with overloaded args';
 
 subtest 'satisfied_by' => sub {
     ok $invocation->satisfied_by( Invocation->new(
@@ -63,5 +69,3 @@ subtest 'satisfied_by' => sub {
         fail;
     }
 };
-
-done_testing(7);

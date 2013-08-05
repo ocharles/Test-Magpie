@@ -4,9 +4,13 @@ package Test::Magpie::ArgumentMatcher;
 use strict;
 use warnings;
 
+use Devel::PartialDump;
 use Exporter qw( import );
+use MooseX::Types::Moose qw( Str CodeRef );
 use Set::Object ();
-use Test::Magpie::Util ();
+use Test::Magpie::Util;
+
+use overload '""' => sub { $_[0]->{name} }, fallback => 1;
 
 our @EXPORT_OK = qw(
     anything
@@ -16,62 +20,89 @@ our @EXPORT_OK = qw(
     type
 );
 
+my $Dumper = Devel::PartialDump->new(pairs => 0);
+
 sub anything {
-    bless sub { return () }, __PACKAGE__;
+    return __PACKAGE__->new(
+        name => 'anything()',
+        matcher => sub { return () },
+    );
 }
 
 sub custom_matcher (&;) {
-    my $test = shift;
-    bless sub {
-        local $_ = $_[0];
-        $test->(@_) ? () : undef
-    }, __PACKAGE__;
+    my ($test) = @_;
+    return __PACKAGE__->new(
+        name => "custom_matcher($test)",
+        matcher => sub {
+            local $_ = $_[0];
+            $test->(@_) ? () : undef
+        },
+    );
 }
 
 sub hash {
     my (%template) = @_;
-    bless sub {
-        my %hash = @_;
-        for (keys %template) {
-            if (my $v = delete $hash{$_}) {
-                return unless Test::Magpie::Util::match($v, $template{$_});
+    return __PACKAGE__->new(
+        name => 'hash(' . $Dumper->dump(%template) . ')',
+        matcher => sub {
+            my %hash = @_;
+            for (keys %template) {
+                if (my $v = delete $hash{$_}) {
+                    return unless Test::Magpie::Util::match($v, $template{$_});
+                }
+                else {
+                    return;
+                }
             }
-            else {
-                return;
-            }
-        }
-        return %hash;
-    }, __PACKAGE__;
+            return %hash;
+        },
+    );
 }
 
 sub set {
     my ($take) = Set::Object->new(@_);
-    bless sub {
-        return Set::Object->new(@_) == $take ? () : undef;
-    }, __PACKAGE__;
+    return __PACKAGE__->new(
+        name => 'set(' . $Dumper->dump(@_) . ')',
+        matcher => sub {
+            return Set::Object->new(@_) == $take ? () : undef;
+        },
+    );
+}
+
+sub type {
+    my ($type) = @_;
+    return __PACKAGE__->new(
+        name => "type($type)",
+        matcher => sub {
+            my ($arg, @in) = @_;
+            $type->check($arg) ? @in : undef
+        },
+    );
+}
+
+=for Pod::Coverage new match
+=cut
+
+sub new {
+    my ($class, %args) = @_;
+    ### assert: defined $args{name}
+    ### assert: defined $args{matcher}
+    ### assert: ref( $args{matcher} ) eq 'CODE'
+
+    return bless \%args, $class;
 }
 
 sub match {
     my ($self, @input) = @_;
-    use Carp;
-    confess unless ref $self;
-    return $self->(@input);
-}
-
-sub type {
-    my $type = shift;
-    bless sub {
-        my ($arg, @in) = @_;
-        $type->check($arg) ? @in : undef
-    }, __PACKAGE__;
+    return $self->{matcher}->(@input);
 }
 
 1;
 
 =head1 SYNOPSIS
 
+    use Test::Magpie;
     use Test::Magpie::ArgumentMatcher qw( anything );
-    use Test::Magpie qw( mock verify );
 
     my $mock = mock;
     $mock->push( button => 'red' );

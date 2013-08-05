@@ -10,28 +10,27 @@ use Devel::PartialDump;
 use MooseX::Types::Moose qw( ArrayRef Str );
 use Test::Magpie::Util qw( match );
 
+my $Dumper = Devel::PartialDump->new(objects => 0, stringify => 1);
+
 has 'method_name' => (
     isa => Str,
-    is => 'ro',
+    is  => 'ro',
     required => 1
 );
 
 has 'arguments' => (
-    traits => [ 'Array' ],
-    isa => ArrayRef,
+    isa     => ArrayRef,
+    traits  => ['Array'],
+    handles => { arguments => 'elements' },
     default => sub { [] },
-    handles => {
-        arguments => 'elements'
-    }
 );
 
 # Stringifies this method call to something that roughly resembles what you'd
 # type in Perl.
 
 sub as_string {
-    my $self = shift;
-    return $self->method_name .
-        '(' . Devel::PartialDump->new->dump($self->arguments) . ')';
+    my ($self) = @_;
+    return $self->method_name . '(' . $Dumper->dump($self->arguments) . ')';
 }
 
 # Returns true if the given C<$invocation> would satisfy this method call.
