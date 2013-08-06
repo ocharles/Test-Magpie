@@ -20,7 +20,7 @@ use Scalar::Util qw( blessed );
 
 with 'Test::Magpie::Role::MethodCall';
 
-# carp messages should not trace back to magpie modules
+# croak() messages should not trace back to Magpie modules
 # to facilitate debugging of user test scripts
 our @CARP_NOT = qw( Test::Magpie::Mock );
 
@@ -30,12 +30,16 @@ has '_executions' => (
     default => sub { [] },
 );
 
-# then_return(@return_values)
+# returns(@return_values)
 #
 # Pushes a stub method that will return the given values to the end of the
 # execution queue.
 
-sub then_return {
+# old names for returns() and dies() methods kept for backwards compatibility
+*then_return = \&returns;
+*then_die    = \&dies;
+
+sub returns {
     my ($self, @return_values) = @_;
 
     push @{$self->_executions}, sub {
@@ -46,12 +50,12 @@ sub then_return {
     return $self;
 }
 
-# then_die($exception)
+# dies($exception)
 #
 # Pushes a stub method that will throw C<$exception> when called to the end of
 # the execution queue.
 
-sub then_die {
+sub dies {
     my ($self, $exception) = @_;
 
     push @{$self->_executions}, sub {

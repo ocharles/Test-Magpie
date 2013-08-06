@@ -1,5 +1,5 @@
-package Test::Magpie::When;
-# ABSTRACT: Stub mode for a mock object to declare a method stub
+package Test::Magpie::Stubber;
+# ABSTRACT: Create methods stubs for mock objects
 
 use Moose;
 use namespace::autoclean;

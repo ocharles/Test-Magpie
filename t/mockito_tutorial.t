@@ -23,8 +23,8 @@ subtest 'Lets verify some behaviour!' => sub {
 subtest 'How about some stubbing?' => sub {
     my $mocked_list = mock;
 
-    when($mocked_list)->get(0)->then_return('first');
-    when($mocked_list)->get(1)->then_die('Kaboom!');
+    stub($mocked_list)->get(0)->returns('first');
+    stub($mocked_list)->get(1)->dies('Kaboom!');
 
     is($mocked_list->get(0) => 'first');
     ok(exception { $mocked_list->get(1) });
@@ -35,9 +35,8 @@ subtest 'How about some stubbing?' => sub {
 
 subtest 'Argument matchers' => sub {
     my $mocked_list = mock;
-    when($mocked_list)->get(type(Int))->then_return('element');
-    when($mocked_list)->get(custom_matcher { $_ eq 'hello' })
-        ->then_return('Hi!');
+    stub($mocked_list)->get(type(Int))->returns('element');
+    stub($mocked_list)->get(custom_matcher { $_ eq 'hello' })->returns('Hi!');
 
     is($mocked_list->get(999) => 'element');
     is($mocked_list->get('hello') => 'Hi!');

@@ -9,7 +9,7 @@ package Test::Magpie;
 
     # create the mock object and stub
     my $baker = mock;
-    when($mock)->bake_loaf('white')->then_return($bread);
+    stub($mock)->bake_loaf('white')->returns($bread);
 
     # execute the code under test
     my $bakery = Bakery->new( bakers => [ $baker ] );
@@ -65,8 +65,8 @@ juicy details.
 
 use aliased 'Test::Magpie::Inspect';
 use aliased 'Test::Magpie::Mock';
+use aliased 'Test::Magpie::Stubber';
 use aliased 'Test::Magpie::Verify';
-use aliased 'Test::Magpie::When';
 
 use Carp qw( croak );
 use Exporter qw( import );
@@ -79,7 +79,7 @@ This module exports the following functions by default:
 
 =for :list
 * mock
-* when
+* stub
 * verify
 
 All other functions need to be imported explicitly.
@@ -88,13 +88,14 @@ All other functions need to be imported explicitly.
 
 our @EXPORT = qw(
     mock
-    when
+    stub
     verify
 );
 our @EXPORT_OK = qw(
     at_least
     at_most
     inspect
+    when
 );
 
 =func mock
@@ -123,23 +124,28 @@ sub mock {
     return Mock->new(class => $class);
 }
 
-=func when
+=func stub
 
-C<when()> is used to tell the method stub to return some value(s) or to raise
+C<stub()> is used to tell the method stub to return some value(s) or to raise
 an exception.
 
-    when($mock)->method(@args)->then_return(1, 2, 3);
-    when($mock)->invalid(@args)->then_die('exception');
+    stub($mock)->method(@args)->returns(1, 2, 3);
+    stub($mock)->invalid(@args)->dies('exception');
 
+=for Pod::Coverage when
 =cut
 
-sub when {
+# old name for stub() deprecated because of potential clash
+# with given/when switch statements
+*when = \&stub;
+
+sub stub {
     my ($mock) = @_;
 
-    croak 'when() must be given a mock object'
+    croak 'stub() must be given a mock object'
         unless defined $mock && MockType->check($mock);
 
-    return When->new(mock => $mock);
+    return Stubber->new(mock => $mock);
 }
 
 =func verify
