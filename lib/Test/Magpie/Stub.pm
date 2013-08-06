@@ -14,20 +14,20 @@ package Test::Magpie::Stub;
 use Moose;
 use namespace::autoclean;
 
+use Carp qw( croak );
 use MooseX::Types::Moose qw( ArrayRef );
 use Scalar::Util qw( blessed );
 
 with 'Test::Magpie::Role::MethodCall';
 
-has 'executions' => (
-    isa => ArrayRef,
-    traits => [ 'Array' ],
+# carp messages should not trace back to magpie modules
+# to facilitate debugging of user test scripts
+our @CARP_NOT = qw( Test::Magpie::Mock );
+
+has '_executions' => (
+    isa     => ArrayRef,
+    is      => 'ro',
     default => sub { [] },
-    handles => {
-        _store_execution => 'push',
-        _next_execution => 'shift',
-        _has_executions => 'count',
-    }
 );
 
 # then_return(@return_values)
@@ -36,11 +36,13 @@ has 'executions' => (
 # execution queue.
 
 sub then_return {
-    my $self = shift;
-    my @ret  = @_;
-    $self->_store_execution(sub {
-        return wantarray ? (@ret) : $ret[0];
-    });
+    my ($self, @return_values) = @_;
+
+    push @{$self->_executions}, sub {
+        return wantarray || @return_values > 1
+            ? @return_values
+            : $return_values[0];
+    };
     return $self;
 }
 
@@ -52,24 +54,31 @@ sub then_return {
 sub then_die {
     my ($self, $exception) = @_;
 
-    $self->_store_execution(sub {
-        if (blessed($exception) && $exception->can('throw')) {
-            $exception->throw;
-        }
-        else {
-            die $exception;
-        }
-    });
+    push @{$self->_executions}, sub {
+        $exception->throw
+            if blessed($exception) && $exception->can('throw');
+
+        croak $exception;
+    };
     return $self;
 }
 
-# Executes the next execution, if possible
+# Executes the next execution
 
 sub execute {
     my ($self) = @_;
-    #$self->_has_executions || confess "Stub has no more executions";
+    my $executions = $self->_executions;
 
-    return ( $self->_next_execution )->();
+    # return undef by default
+    return if @$executions == 0;
+
+    # use the execution at the front of the queue and
+    # shift it off the queue - unless it is the last one
+    my $execution = @$executions > 1
+        ? shift(@$executions)
+        : $executions->[0];
+
+    return $execution->();
 }
 
 __PACKAGE__->meta->make_immutable;

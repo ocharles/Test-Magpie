@@ -23,7 +23,9 @@ sub AUTOLOAD {
     my $mock  = get_attribute_value($self, 'mock');
     my $stubs = get_attribute_value($mock, 'stubs');
 
-    push @{ $stubs->{$method_name} }, $stub;
+    # add new stub to front of queue so that it takes precedence
+    # over existing stubs that would satisfy the same invocations
+    unshift @{ $stubs->{$method_name} }, $stub;
 
     return $stub;
 }

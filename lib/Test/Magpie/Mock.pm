@@ -103,17 +103,15 @@ sub AUTOLOAD {
     );
 
     my $invocations = get_attribute_value($self, 'invocations');
+    my $stubs       = get_attribute_value($self, 'stubs');
+
     push @$invocations, $invocation;
 
     # find a stub to return a response
-    if (
-        my $stubs = get_attribute_value($self, 'stubs')->{ $method_name }
-    ) {
-        for my $stub (@$stubs) {
-            return $stub->execute if (
-                $stub->satisfied_by($invocation) &&
-                $stub->_has_executions
-            );
+    if (defined $stubs->{$method_name}) {
+        foreach my $stub ( @{$stubs->{$method_name}} ) {
+            return $stub->execute
+                if $stub->satisfied_by($invocation);
         }
     }
     return;
