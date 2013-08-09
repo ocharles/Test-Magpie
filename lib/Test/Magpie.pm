@@ -237,11 +237,11 @@ sub verify {
 
 =func inspect
 
-Inspect method invocations on a mock object.
+Inspect method calls on a mock object.
 
-    $invocation = inspect($mock)->method(@args);
-    is( $invocation->method_name, 'foo' );
-    is_deeply( [$invocation->arguments], [qw( bar baz )] );
+    $method_call = inspect($mock)->method(@args);
+    is( $method_call->name, 'foo' );
+    is_deeply( [$method_call->args], [qw( bar baz )] );
 
 =cut
 
@@ -273,12 +273,12 @@ sub at_least {
         unless ! defined $n || looks_like_number $n;
 
     return sub {
-        my ($invocations, $called, $test_name, $tb) = @_;
+        my ($num_calls, $called, $test_name, $tb) = @_;
 
         $test_name = sprintf '%s was called at least %u time(s)', $called, $n
             unless defined $test_name;
 
-        $tb->cmp_ok($invocations, '>=', $n, $test_name);
+        $tb->cmp_ok($num_calls, '>=', $n, $test_name);
     }
 }
 
@@ -301,12 +301,12 @@ sub at_most {
         unless ! defined $n || looks_like_number $n;
 
     return sub {
-        my ($invocations, $called, $test_name, $tb) = @_;
+        my ($num_calls, $called, $test_name, $tb) = @_;
 
         $test_name = sprintf '%s was called at most %u time(s)', $called, $n
             unless defined $test_name;
 
-        $tb->cmp_ok($invocations, '<=', $n, $test_name);
+        $tb->cmp_ok($num_calls, '<=', $n, $test_name);
     }
 }
 

@@ -33,9 +33,9 @@ subtest 'mock()' => sub {
         my $coderef = $mock->can('can_method');
         $coderef->($mock, 'baz', 123);
 
-        my $invocation = get_attribute_value($mock, 'invocations')->[-1];
-        is $invocation->method_name, 'can_method',        'method_name';
-        is_deeply [$invocation->arguments], ['baz', 123], 'arguments';
+        my $method_call = get_attribute_value($mock, 'calls')->[-1];
+        is $method_call->name, 'can_method',          'name';
+        is_deeply [$method_call->args], ['baz', 123], 'args';
     };
 };
 

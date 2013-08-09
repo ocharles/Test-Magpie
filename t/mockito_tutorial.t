@@ -44,7 +44,7 @@ subtest 'Argument matchers' => sub {
     verify($mocked_list)->get(type(Int));
 };
 
-subtest 'Verifying the amount of invocations' => sub {
+subtest 'Verifying the number of invocations' => sub {
     my $list = mock;
 
     $list->add($_) for qw( one two two three three three );

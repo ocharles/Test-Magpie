@@ -30,15 +30,15 @@ subtest 'inspect()' => sub {
 subtest 'get invocation' => sub {
     my $invocation1 = $inspect->foo;
     isa_ok $invocation1, 'Test::Magpie::Invocation';
-    is $invocation1->method_name, 'foo';
-    is_deeply [$invocation1->arguments], [];
+    is $invocation1->name, 'foo';
+    is_deeply [$invocation1->args], [];
 };
 
 subtest 'get invocation with argument matchers' => sub {
     my $invocation2 = $inspect->foo(anything);
     isa_ok $invocation2, 'Test::Magpie::Invocation';
-    is $invocation2->method_name, 'foo';
-    is_deeply [$invocation2->arguments], [123, 'bar', 456];
+    is $invocation2->name, 'foo';
+    is_deeply [$invocation2->args], [123, 'bar', 456];
 };
 
 done_testing(4);

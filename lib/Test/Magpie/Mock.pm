@@ -61,16 +61,16 @@ has 'class' => (
     default => __PACKAGE__,
 );
 
-=attr invocations
+=attr calls
 
-An array reference containing a record of all methods invoked on this mock.
+An array reference containing a record of all methods called on this mock.
 These are used for verification and inspection.
 
 This attribute is internal, and not publically accessible.
 
 =cut
 
-has 'invocations' => (
+has 'calls' => (
     isa => ArrayRef[Invocation],
     is => 'bare',
     default => sub { [] }
@@ -96,22 +96,22 @@ sub AUTOLOAD {
     my $self = shift;
     my $method_name = extract_method_name($AUTOLOAD);
 
-    # record the method invocation for verification
-    my $invocation  = Invocation->new(
-        method_name => $method_name,
-        arguments   => \@_,
+    # record the method call for verification
+    my $method_call = Invocation->new(
+        name => $method_name,
+        args => \@_,
     );
 
-    my $invocations = get_attribute_value($self, 'invocations');
-    my $stubs       = get_attribute_value($self, 'stubs');
+    my $calls = get_attribute_value($self, 'calls');
+    my $stubs = get_attribute_value($self, 'stubs');
 
-    push @$invocations, $invocation;
+    push @$calls, $method_call;
 
     # find a stub to return a response
     if (defined $stubs->{$method_name}) {
         foreach my $stub ( @{$stubs->{$method_name}} ) {
             return $stub->execute
-                if $stub->satisfied_by($invocation);
+                if $stub->satisfied_by($method_call);
         }
     }
     return;

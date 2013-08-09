@@ -14,55 +14,55 @@ use Test::Magpie::Util qw( get_attribute_value );
 my $mock = mock;
 ok ! $mock->foo(123, bar => 456), 'mock method invoked';
 
-my $invocation = get_attribute_value($mock, 'invocations')->[-1];
+my $invocation = get_attribute_value($mock, 'calls')->[-1];
 isa_ok $invocation, Invocation;
 
-is $invocation->method_name, 'foo',                    'method_name';
-is_deeply [$invocation->arguments], [123, 'bar', 456], 'arguments';
-is $invocation->as_string, 'foo(123, "bar", 456)',     'as_string';
+is $invocation->name, 'foo',                       'name';
+is_deeply [$invocation->args], [123, 'bar', 456],  'args';
+is $invocation->as_string, 'foo(123, "bar", 456)', 'as_string';
 
 is Invocation->new(
-    method_name => 'method',
-    arguments => [anything],
+    name => 'method',
+    args => [anything],
 )->as_string, 'method(anything())', 'as_string with overloaded args';
 
 subtest 'satisfied_by' => sub {
     ok $invocation->satisfied_by( Invocation->new(
-        method_name => 'foo',
-        arguments => [123, 'bar', 456]
+        name => 'foo',
+        args => [123, 'bar', 456]
     ) ), 'exact match';
 
     ok ! $invocation->satisfied_by(
         Invocation->new(
-            method_name => 'bar',
-            arguments => [123, 'bar', 456],
+            name => 'bar',
+            args => [123, 'bar', 456],
         )
-    ), 'different method_name';
+    ), 'different name';
 
     ok ! $invocation->satisfied_by(
-        Invocation->new(method_name => 'foo')
-    ), 'no arguments';
-
-    ok ! $invocation->satisfied_by(
-        Invocation->new(
-            method_name => 'foo',
-            arguments => [123, 'bar'],
-        )
-    ), 'less arguments';
+        Invocation->new(name => 'foo')
+    ), 'no args';
 
     ok ! $invocation->satisfied_by(
         Invocation->new(
-            method_name => 'foo',
-            arguments => [123, 'bar', 123],
+            name => 'foo',
+            args => [123, 'bar'],
         )
-    ), 'different arguments';
+    ), 'less args';
 
     ok ! $invocation->satisfied_by(
         Invocation->new(
-            method_name => 'foo',
-            arguments => [123, 'bar', 456, 123]
+            name => 'foo',
+            args => [123, 'bar', 123],
         )
-    ), 'more arguments';
+    ), 'different args';
+
+    ok ! $invocation->satisfied_by(
+        Invocation->new(
+            name => 'foo',
+            args => [123, 'bar', 456, 123]
+        )
+    ), 'more args';
 
     SKIP: {
         skip 'Not allowed: Invocation objects with argument matchers', 1;

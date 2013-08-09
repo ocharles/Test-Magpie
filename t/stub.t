@@ -35,10 +35,10 @@ subtest 'stub->invoked' => sub {
     for (@args) {
         my $stub = stub($mock)->foo(@$_);
         isa_ok $stub, Stub;
-        is $stubs->{foo}[0], $stub,       'stored at front of queue';
+        is $stubs->{foo}[0], $stub,  'stored at front of queue';
 
-        is $stub->method_name, 'foo',     'method_name';
-        is_deeply [$stub->arguments], $_, 'arguments';
+        is $stub->name, 'foo',       'name';
+        is_deeply [$stub->args], $_, 'args';
     }
 };
 

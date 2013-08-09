@@ -16,8 +16,8 @@ sub AUTOLOAD {
     my $method_name = extract_method_name($AUTOLOAD);
 
     my $stub = Stub->new(
-        method_name => $method_name,
-        arguments   => \@_,
+        name => $method_name,
+        args => \@_,
     );
 
     my $mock  = get_attribute_value($self, 'mock');

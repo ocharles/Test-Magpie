@@ -44,14 +44,14 @@ sub AUTOLOAD {
     my $method_name = extract_method_name($AUTOLOAD);
 
     my $observe = Invocation->new(
-        method_name => $method_name,
-        arguments   => \@_,
+        name => $method_name,
+        args => \@_,
     );
 
-    my $mock        = get_attribute_value($self, 'mock');
-    my $invocations = get_attribute_value($mock, 'invocations');
+    my $mock  = get_attribute_value($self, 'mock');
+    my $calls = get_attribute_value($mock, 'calls');
 
-    my $matches = grep { $observe->satisfied_by($_) } @$invocations;
+    my $matches = grep { $observe->satisfied_by($_) } @$calls;
 
     my $test_name = $self->_test_name;
 
