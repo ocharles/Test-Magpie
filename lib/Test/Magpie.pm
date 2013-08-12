@@ -84,6 +84,8 @@ This module exports the following functions by default:
 
 All other functions need to be imported explicitly.
 
+=for Pod::Coverage at_least at_most inspect when
+
 =cut
 
 our @EXPORT = qw(
@@ -132,7 +134,6 @@ an exception.
     stub($mock)->method(@args)->returns(1, 2, 3);
     stub($mock)->invalid(@args)->dies('exception');
 
-=for Pod::Coverage when
 =cut
 
 # old name for stub() deprecated because of potential clash
@@ -235,16 +236,6 @@ sub verify {
     return Verify->new(mock => $mock, %options);
 }
 
-=func inspect
-
-Inspect method calls on a mock object.
-
-    $method_call = inspect($mock)->method(@args);
-    is( $method_call->name, 'foo' );
-    is_deeply( [$method_call->args], [qw( bar baz )] );
-
-=cut
-
 sub inspect {
     my ($mock) = @_;
 
@@ -253,17 +244,6 @@ sub inspect {
 
     return Inspect->new(mock => $mock);
 }
-
-=func at_least (deprecated)
-
-Used with C<verify()> to verify that a method was invoked at least C<$n> times.
-
-    verify($mock, times => at_least($n))->method(@args);
-
-This function has been deprecated. Use the C<at_least> option for C<verify()>
-instead.
-
-=cut
 
 sub at_least {
     warnings::warnif('deprecated', 'at_least() is deprecated');
@@ -281,17 +261,6 @@ sub at_least {
         $tb->cmp_ok($num_calls, '>=', $n, $test_name);
     }
 }
-
-=func at_most (deprecated)
-
-Used with C<verify()> to verify that a method was invoked at most C<$n> times.
-
-    verify($mock, times => at_most($n))->method(@args);
-
-This function has been deprecated. Use the C<at_most> option for C<verify()>
-instead.
-
-=cut
 
 sub at_most {
     warnings::warnif('deprecated', 'at_most() is deprecated');
