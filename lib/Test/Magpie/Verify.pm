@@ -1,5 +1,5 @@
 package Test::Magpie::Verify;
-# ABSTRACT: Verify interactions with a mock object by looking into its invocation history
+# ABSTRACT: Look into the invocation history of a mock for verification
 
 use Moose;
 use namespace::autoclean;
@@ -44,14 +44,14 @@ sub AUTOLOAD {
     my $method_name = extract_method_name($AUTOLOAD);
 
     my $observe = Invocation->new(
-        name => $method_name,
-        args => \@_,
+        method_name => $method_name,
+        arguments   => \@_,
     );
 
-    my $mock  = get_attribute_value($self, 'mock');
-    my $calls = get_attribute_value($mock, 'calls');
+    my $mock        = get_attribute_value($self, 'mock');
+    my $invocations = get_attribute_value($mock, 'invocations');
 
-    my $matches = grep { $observe->satisfied_by($_) } @$calls;
+    my $matches = grep { $observe->satisfied_by($_) } @$invocations;
 
     my $test_name = $self->_test_name;
 
@@ -92,3 +92,17 @@ sub AUTOLOAD {
 
 __PACKAGE__->meta->make_immutable;
 1;
+
+=head1 DESCRIPTION
+
+Spy objects allow you to look inside a mock and verify that certain methods have
+been called. You create these objects by using C<verify> from L<Test::Magpie>.
+
+Spy objects do not have a public API as such; they share the same method calls
+as the mock object itself. The difference being, a method call now checks that
+the method was invoked on the mock at some point in time, and if not, fails a
+test.
+
+You may use argument matchers in verifying method calls.
+
+=cut

@@ -9,7 +9,7 @@ package Test::Magpie;
 
     # create the mock object and stub
     my $baker = mock;
-    stub($mock)->bake_loaf('white')->returns($bread);
+    when($mock)->bake_loaf('white')->then_return($bread);
 
     # execute the code under test
     my $bakery = Bakery->new( bakers => [ $baker ] );
@@ -65,8 +65,8 @@ juicy details.
 
 use aliased 'Test::Magpie::Inspect';
 use aliased 'Test::Magpie::Mock';
-use aliased 'Test::Magpie::Stubber';
 use aliased 'Test::Magpie::Verify';
+use aliased 'Test::Magpie::When';
 
 use Carp qw( croak );
 use Exporter qw( import );
@@ -79,25 +79,22 @@ This module exports the following functions by default:
 
 =for :list
 * mock
-* stub
+* when
 * verify
 
 All other functions need to be imported explicitly.
-
-=for Pod::Coverage at_least at_most inspect when
 
 =cut
 
 our @EXPORT = qw(
     mock
-    stub
+    when
     verify
 );
 our @EXPORT_OK = qw(
     at_least
     at_most
     inspect
-    when
 );
 
 =func mock
@@ -126,27 +123,23 @@ sub mock {
     return Mock->new(class => $class);
 }
 
-=func stub
+=func when
 
-C<stub()> is used to tell the method stub to return some value(s) or to raise
+C<when()> is used to tell the method stub to return some value(s) or to raise
 an exception.
 
-    stub($mock)->method(@args)->returns(1, 2, 3);
-    stub($mock)->invalid(@args)->dies('exception');
+    when($mock)->method(@args)->then_return(1, 2, 3);
+    when($mock)->invalid(@args)->then_die('exception');
 
 =cut
 
-# old name for stub() deprecated because of potential clash
-# with given/when switch statements
-*when = \&stub;
-
-sub stub {
+sub when {
     my ($mock) = @_;
 
-    croak 'stub() must be given a mock object'
+    croak 'when() must be given a mock object'
         unless defined $mock && MockType->check($mock);
 
-    return Stubber->new(mock => $mock);
+    return When->new(mock => $mock);
 }
 
 =func verify
@@ -236,6 +229,16 @@ sub verify {
     return Verify->new(mock => $mock, %options);
 }
 
+=func inspect
+
+Inspect method invocations on a mock object.
+
+    $invocation = inspect($mock)->method(@args);
+    is( $invocation->method_name, 'foo' );
+    is_deeply( [$invocation->arguments], [qw( bar baz )] );
+
+=cut
+
 sub inspect {
     my ($mock) = @_;
 
@@ -245,6 +248,17 @@ sub inspect {
     return Inspect->new(mock => $mock);
 }
 
+=func at_least (deprecated)
+
+Used with C<verify()> to verify that a method was invoked at least C<$n> times.
+
+    verify($mock, times => at_least($n))->method(@args);
+
+This function has been deprecated. Use the C<at_least> option for C<verify()>
+instead.
+
+=cut
+
 sub at_least {
     warnings::warnif('deprecated', 'at_least() is deprecated');
 
@@ -253,14 +267,25 @@ sub at_least {
         unless ! defined $n || looks_like_number $n;
 
     return sub {
-        my ($num_calls, $called, $test_name, $tb) = @_;
+        my ($invocations, $called, $test_name, $tb) = @_;
 
         $test_name = sprintf '%s was called at least %u time(s)', $called, $n
             unless defined $test_name;
 
-        $tb->cmp_ok($num_calls, '>=', $n, $test_name);
+        $tb->cmp_ok($invocations, '>=', $n, $test_name);
     }
 }
+
+=func at_most (deprecated)
+
+Used with C<verify()> to verify that a method was invoked at most C<$n> times.
+
+    verify($mock, times => at_most($n))->method(@args);
+
+This function has been deprecated. Use the C<at_most> option for C<verify()>
+instead.
+
+=cut
 
 sub at_most {
     warnings::warnif('deprecated', 'at_most() is deprecated');
@@ -270,12 +295,12 @@ sub at_most {
         unless ! defined $n || looks_like_number $n;
 
     return sub {
-        my ($num_calls, $called, $test_name, $tb) = @_;
+        my ($invocations, $called, $test_name, $tb) = @_;
 
         $test_name = sprintf '%s was called at most %u time(s)', $called, $n
             unless defined $test_name;
 
-        $tb->cmp_ok($num_calls, '<=', $n, $test_name);
+        $tb->cmp_ok($invocations, '<=', $n, $test_name);
     }
 }
 

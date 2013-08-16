@@ -1,6 +1,5 @@
 package Test::Magpie::Role::MethodCall;
 # ABSTRACT: A role that represents a method call
-
 use Moose::Role;
 use namespace::autoclean;
 
@@ -10,42 +9,33 @@ use Devel::PartialDump;
 use MooseX::Types::Moose qw( ArrayRef Str );
 use Test::Magpie::Util qw( match );
 
-# cause string overloaded objects (ArgumentMatchers) to be stringified
 my $Dumper = Devel::PartialDump->new(objects => 0, stringify => 1);
 
-has 'name' => (
+has 'method_name' => (
     isa => Str,
     is  => 'ro',
     required => 1
 );
 
-has 'args' => (
+has 'arguments' => (
     isa     => ArrayRef,
     traits  => ['Array'],
-    handles => { args => 'elements' },
+    handles => { arguments => 'elements' },
     default => sub { [] },
 );
 
-# Stringifies this method call to something that roughly resembles what you'd
-# type in Perl.
-
 sub as_string {
     my ($self) = @_;
-    return $self->name . '(' . $Dumper->dump($self->args) . ')';
+    return $self->method_name . '(' . $Dumper->dump($self->arguments) . ')';
 }
-
-# Returns true if the given C<$invocation> would satisfy this method call.
 
 sub satisfied_by {
     my ($self, $invocation) = @_;
 
-    return unless $invocation->name eq $self->name;
+    return unless $invocation->method_name eq $self->method_name;
 
-    my @expected = $self->args;
-    my @input    = $invocation->args;
-    # invocation arguments can't be argument matchers
-    ### assert: ! grep { ref($_) eq 'ArgumentMatcher' } @input
-
+    my @input = $invocation->arguments;
+    my @expected = $self->arguments;
     while (@input && @expected) {
         my $matcher = shift @expected;
 
@@ -54,10 +44,36 @@ sub satisfied_by {
         }
         else {
             my $value = shift @input;
-            return if !match($value, $matcher);
+            return '' if !match($value, $matcher);
         }
     }
     return @input == 0 && @expected == 0;
 }
 
 1;
+
+=head1 INTERNAL
+
+This class is internal and not meant for use outside Magpie.
+
+=method as_string
+
+Stringifies this method call to something that roughly resembles what you'd type
+in Perl.
+
+=method satisfied_by (MethodCall $invocation)
+
+Returns true if the given $invocation would satisfy this method call. Note that
+while the $invocation could have arguments matchers in C<arguments>, they will
+be passed into this method calls argument matcher. Which basically means, it
+probably won't work.
+
+=attr arguments
+
+An array reference of arguments, or argument matchers.
+
+=attr method_name
+
+The name of the method.
+
+=cut
