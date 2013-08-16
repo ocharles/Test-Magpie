@@ -1,5 +1,9 @@
 Revision history for Test-Magpie
 
+0.11    2013-08-16
+        Reverted changes from last release because of backwards
+        incompatibility - project is being forked instead.
+
 0.10    2013-08-12
         Changed when->then_return to stub->returns.
         Changed stubbing behaviour to match Mockito.
